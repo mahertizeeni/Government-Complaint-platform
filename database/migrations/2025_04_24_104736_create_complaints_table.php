@@ -16,9 +16,11 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('intity',['الكهرباء','المياه','البلدية','المالية','العقارية']);
             $table->string('city');
+            $table->string('attachments')->nullable();
             $table->text('description');
             $table->boolean('is_emergency')->default(false);
             $table->enum('status',['pending','accepted','rejected'])->default('pending');
+            $table->text('map_iframe')->nullable();
             $table->timestamps();
         });
     }
