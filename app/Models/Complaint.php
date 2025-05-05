@@ -6,7 +6,7 @@ use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class ComplaintModel extends Model
+class Complaint extends Model
 {
     use HasFactory;
 
@@ -14,15 +14,20 @@ class ComplaintModel extends Model
     protected $table = 'complaints';
 
     // تحديد الحقول القابلة للتعبئة
-    protected $fillable = [
+    protected $guarded = ['id'];
+    /* protected $fillable = [
         'title',
         'description',
         'user_id', // إذا كنت تريد ربط الشكوى بالمستخدم
-    ];
+    ]; */
 
     // إذا كنت تريد تحديد العلاقة مع نموذج المستخدم
-    public function user()
+    /* public function user()
     {
         return $this->belongsTo(User::class);
+    } */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 }
