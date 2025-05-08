@@ -11,14 +11,12 @@ class Employee extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    // لو جدولك اسمه employees فما في داعي لتعريف $table
-    // protected $table = 'employees';
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'intity', // المؤسسة التابع لها الموظف
+        'intity', 
     ];
 
     protected $hidden = [
@@ -30,7 +28,7 @@ class Employee extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    // علاقة الموظف مع الشكاوى في مؤسسته
+
     public function complaints()
     {
         return $this->hasMany(Complaint::class, 'intity', 'intity');
