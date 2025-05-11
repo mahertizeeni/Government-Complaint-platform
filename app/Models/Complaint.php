@@ -19,7 +19,7 @@ class Complaint extends Model
         'title',
         'description',
         'user_id', // إذا كنت تريد ربط الشكوى بالمستخدم
-    ]; */
+    ];
 
     // إذا كنت تريد تحديد العلاقة مع نموذج المستخدم
     /* public function user()

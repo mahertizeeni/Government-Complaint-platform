@@ -13,10 +13,8 @@ return new class extends Migration
     {
         Schema::create('complaints', function (Blueprint $table) {
             $table->id();
-            // user_id FK to users.id (default)
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            
-            $table->enum('intity', ['الكهرباء', 'المياه', 'البلدية', 'المالية', 'العقارية']);
+            $table->enum('intity',['الكهرباء','المياه','البلدية','المالية','العقارية']);
             $table->string('city');
             $table->string('attachments')->nullable();
             $table->text('description');
@@ -28,15 +26,10 @@ return new class extends Migration
             $table->unsignedBigInteger('category_id');
             $table->foreign('category_id')->references('category_id')->on('categories')->onDelete('cascade');
 
+            $table->enum('status',['pending','accepted','rejected'])->default('pending');
+            $table->text('map_iframe')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('complaints');
-    }
 };
