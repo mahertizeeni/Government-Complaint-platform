@@ -19,17 +19,17 @@ return new class extends Migration
             $table->string('attachments')->nullable();
             $table->text('description');
             $table->boolean('is_emergency')->default(false);
+            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
+            $table->text('map_iframe')->nullable();
+
+            // category_id FK to categories.category_id (non-standard PK)
+            $table->unsignedBigInteger('category_id');
+            $table->foreign('category_id')->references('category_id')->on('categories')->onDelete('cascade');
+
             $table->enum('status',['pending','accepted','rejected'])->default('pending');
             $table->text('map_iframe')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('complaints');
-    }
 };
