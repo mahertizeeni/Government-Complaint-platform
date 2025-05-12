@@ -15,19 +15,12 @@ class Complaint extends Model
 
     // تحديد الحقول القابلة للتعبئة
     protected $guarded = ['id'];
-    /* protected $fillable = [
-        'title',
-        'description',
-        'user_id', // إذا كنت تريد ربط الشكوى بالمستخدم
-    ];
-
-    // إذا كنت تريد تحديد العلاقة مع نموذج المستخدم
-    /* public function user()
+    public function governmentEntity()
     {
-        return $this->belongsTo(User::class);
-    } */
-    public function category()
+        return $this->belongsTo(GovernmentEntity::class);
+    }
+    public function City()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(City::class);
     }
 }

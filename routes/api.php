@@ -19,6 +19,7 @@ Route::get('/user', function (Request $request) {
 =======
 use App\Http\Controllers\ContactUsController;
 use App\Http\Controllers\employee\auth\AuthController;
+use App\Http\Controllers\EmployeeComplaintsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SmartChatController;
@@ -36,7 +37,11 @@ Route::controller(AuthController::class)->group(function(){
 Route::prefix('employee')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
-    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::middleware('auth:sanctum')->group(function () {
+        
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('complaints',[EmployeeComplaintsController::class,'getComplaints']);
+    });
 });
 
 

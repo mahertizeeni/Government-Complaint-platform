@@ -16,7 +16,8 @@ class Employee extends Authenticatable
         'name',
         'email',
         'password',
-        'intity', 
+        'government_entity_id',
+        'city_id' 
     ];
 
     protected $hidden = [
@@ -32,5 +33,14 @@ class Employee extends Authenticatable
     public function complaints()
     {
         return $this->hasMany(Complaint::class, 'intity', 'intity');
+    }
+    
+    public function governmentEntity()
+    {
+        return $this->belongsTo(GovernmentEntity::class);
+    }
+    public function City()
+    {
+        return $this->belongsTo(City::class);
     }
 }
