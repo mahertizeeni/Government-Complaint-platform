@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use id;
+use App\Models\City;
+use Illuminate\Support\Facades\Auth;
+
 use App\Models\Complaint;
+use App\Models\GovernmentEntity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
@@ -19,6 +22,7 @@ class SmartChatController extends Controller
         if (!$userMessage) {
             return response()->json(['error' => 'الرسالة مطلوبة.'], 400);
         }
+        // قواعد النظام
 
         $systemMessage = [
             'role' => 'system',
@@ -74,11 +78,30 @@ class SmartChatController extends Controller
 
             if ($response->successful()) {
                 $aiReply = $response->json()['choices'][0]['message']['content'];
-                if ($userMessage == 'المدينة؟') {
-                    Session::put('city', $aiReply);  // مثال على تخزين المدينة
-                }
+                // تخزين المدينة في الجلسة
+                if ($userMessage == 'المدينة') {
+                   $city =City::where('name',$userMessage);
+                   if($city){
+                    session::put('city_id',$city->id);
+                    $aiReply = "تم تحديد الجهة".$city->name ; 
+                   }
+                   else {
+                    $allCities=City::pluck('name')->toarray();
+                    $aiReply = "لم يتم ايجاد المدينة الرجاء اختيار احدى ".implode(', ',$allCities);
+                   }}
+                //    تخزين الجهة في الجلسة
+                   
                 if ($userMessage == 'الجهة') {
-                    Session::put('intity', $aiReply);  // مثال على تخزين المدينة
+                   $governmentEntity =GovernmentEntity::where('name',$userMessage);
+                   if($governmentEntity){
+                    session::put('government_entity_id',$governmentEntity->id);
+                    $aiReply = "تم تحديد الجهة".$governmentEntity->name ; 
+                   }
+                   else {
+                    $allEntities=GovernmentEntity::pluck('name')->toarray();
+                    $aiReply = "لم يتم ايجاد الجهة الرجاء اختيار احدى ".implode(', ',$allEntities);
+                   }
+                   
                 }
 
                 return response()->json([
@@ -95,16 +118,16 @@ class SmartChatController extends Controller
     public function submitComplaint(Request $request)
     {
         // استرجاع البيانات من الجلسة
-        $city = Session::get('city');
-        $intity = Session::get('intity');
+        $city_id = Session::get('city_id');
+        $government_entity_id = Session::get('government_entity_id');
         $description = $request->input('description');
         $attachments = ''; 
 
         // تخزين الشكوى في قاعدة البيانات
         $complaint = new Complaint();
-        // $complaint->user_id = auth()->id();  
-        $complaint->city = $city;
-        $complaint->intity = $intity;
+        $complaint->user_id = auth::user_id();  
+        $complaint->city_id = $city_id;
+        $complaint->government_entity_id = $government_entity_id;
         $complaint->description = $description;
         $complaint->attachments = $attachments;
         $complaint->is_emergency = false;  // إذا كان هناك طارئ

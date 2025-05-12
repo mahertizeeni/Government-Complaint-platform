@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('complaints', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('intity',['الكهرباء','المياه','البلدية','المالية','العقارية']);
-            $table->string('city');
+            $table->foreignId('government_entity_id')->constrained()->onDelete('cascade');
+            $table->foreignId('city_id')->constrained()->onDelete('cascade');
             $table->string('attachments')->nullable();
             $table->text('description');
             $table->boolean('is_emergency')->default(false);
