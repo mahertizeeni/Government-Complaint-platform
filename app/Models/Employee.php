@@ -32,7 +32,7 @@ class Employee extends Authenticatable
 
     public function complaints()
     {
-        return $this->hasMany(Complaint::class, 'intity', 'intity');
+        return $this->hasMany(Complaint::class, 'Entity', 'Entity');
     }
     
     public function governmentEntity()
