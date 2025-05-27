@@ -22,4 +22,8 @@ class Complaint extends Model
     {
         return $this->belongsTo(City::class);
     }
+    public function User()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

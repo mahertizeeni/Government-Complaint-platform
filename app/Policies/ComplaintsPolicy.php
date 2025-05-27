@@ -57,15 +57,16 @@ class ComplaintsPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Complaint $complaint): bool
+    public function delete(Authenticatable $user, Complaint $complaint): bool
     {
-        return false;
+        return $user instanceof User && $user->id === $complaint->user_id;
+
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Complaint $complaint): bool
+    public function restore(Authenticatable $user, Complaint $complaint): bool
     {
         return false;
     }
@@ -73,7 +74,7 @@ class ComplaintsPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Complaint $complaint): bool
+    public function forceDelete(Authenticatable $user, Complaint $complaint): bool
     {
         return false;
     }
