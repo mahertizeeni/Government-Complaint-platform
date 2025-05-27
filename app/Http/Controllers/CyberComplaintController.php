@@ -20,8 +20,8 @@ class CyberComplaintController extends Controller
             $filePath = $file->storeAs('uploads',$fileName,'public');
             $data['evidence_file']=$filePath;
         }
-        // $data['user_id']= Auth::id() ;
-        $data['user_id']= 66 ;
+       $data['user_id']= Auth::id() ;
+        
         CyberComplaint::create($data);
 
         return ApiResponse::sendResponse(201,'Complaint Sent Successfully ',$data);
