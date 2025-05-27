@@ -2,14 +2,17 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;  
 use App\Models\Complaint;
+use App\Models\CyberComplaint;
 use App\Policies\ComplaintsPolicy;
+use App\Policies\CyberComplaintsPolicy;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;  
 
 class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
         Complaint::class => ComplaintsPolicy::class,
+        CyberComplaint::class => CyberComplaintsPolicy::class,
     ];
 
     /**

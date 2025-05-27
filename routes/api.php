@@ -4,8 +4,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ContactUsController;
+use App\Http\Controllers\CyberComplaintController;
 use App\Http\Controllers\employee\auth\AuthController;
 use App\Http\Controllers\EmployeeComplaintsController;
+use App\Http\Controllers\EmployeeCyberComplaintsController;
 use App\Http\Controllers\SmartChatController;
 use App\Models\ContactUs;
 
@@ -21,7 +23,9 @@ Route::post('/chat', [SmartChatController::class, 'chat']);
 
 ######### ContactUs Endpoint
 Route::post('/contactus',[ContactUsController::class, '__invoke']);
-Route::post('/aa',[ContactUsController::class]);
+######### CyberComplaint Endpoint
+Route::post('/cybercomplaint',[CyberComplaintController::class,'store']);
+
 Route::controller(AuthController::class)->group(function(){
     
 });
@@ -30,10 +34,11 @@ Route::prefix('employee')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
     Route::middleware('auth:sanctum')->group(function () {
-        #### middelware fpr making sure of logging in
+        #### middelware for making sure of logging in
         Route::post('logout', [AuthController::class, 'logout']);
         #### Get Complaints Gor Employee 
         Route::get('complaints',[EmployeeComplaintsController::class,'getComplaints']);
+        Route::get('Cybercomplaints',[EmployeeCyberComplaintsController::class,'getComplaints']);
         #### Update Status
         Route::put('complaints/{id}/status',[EmployeeComplaintsController::class,'updateStatus']);
     });
