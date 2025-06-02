@@ -2,35 +2,25 @@
 
 namespace App\Http\Controllers\employee\auth;
 
-use id;
 use App\Models\Employee;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\GovernmentEntity;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\EmployeeLoginRequest;
+use App\Http\Requests\EmployeeRegisterRequest;
 use App\Models\City;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Facades\Validator;
+
+use function Laravel\Prompts\error;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => ['required', 'string'],
-            'email' => ['required', 'email', 'unique:employees,email'],
-            'password' => ['required', 'confirmed'],
-            'government_entity' => 'required',
-            'city'=>['required'],
-        ]);
-
-        if ($validator->fails()) {
-            return ApiResponse::sendResponse(422, 'Register Validation Error', $validator->errors());
-        }
-
-       $governmentEntity = GovernmentEntity::where('name', $request->government_entity)->first();
+    public function register(EmployeeRegisterRequest $request)
+    { 
+        $validated = $request->validated();
+    // التحقق من اسم الجهة الحكومية المدخلة
+       $governmentEntity = GovernmentEntity::where('name',$validated['government_entity'])->first();
 
     if (!$governmentEntity)
      {
@@ -38,7 +28,7 @@ class AuthController extends Controller
      }  
       $government_entity_id = $governmentEntity->id;
 
-      $city=City::where('name',$request->city)->first();
+      $city=City::where('name',$validated['city'])->first();
       if(!$city)
       {
         return ApiResponse::sendResponse(404 , 'City Not Found',[]);
@@ -47,57 +37,51 @@ class AuthController extends Controller
 
 
         $employee = Employee::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
             'government_entity_id' => $government_entity_id,
             'city_id' => $city_id,
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($validated['password']),
         ]);
-
+        // تجهيز توكن مصادقة
         $data['token'] = $employee->createToken('EmployeeUser')->plainTextToken;
         $data['name'] = $employee->name;
         $data['email'] = $employee->email;
 
         return ApiResponse::sendResponse(201, 'Employee Registered Successfully', $data);
     }
-
-    public function login(Request $request)
+// LogIn Function
+    public function login(EmployeeLoginRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+        $validated = $request->validated();
 
-        if ($validator->fails()) {
-            return ApiResponse::sendResponse(422, 'Login Validation Error', $validator->errors());
+        $employee = Employee::where('email', $validated['email'])->first();
+
+        if (!$employee) {
+        return ApiResponse::sendResponse(404, 'Email not found', []);
         }
 
-        $employee = Employee::where('email', $request->email)->first();
-
-        if (!$employee || !Hash::check($request->password, $employee->password)) {
-            return ApiResponse::sendResponse(401, 'Invalid credentials', null);
-        }
-
+         if (!Hash::check($validated['password'], $employee->password)) {
+        return ApiResponse::sendResponse(401, 'Incorrect password', []);
+         }
+        // انشاء توكن لتحقق
         $data['token'] = $employee->createToken('EmployeeUser')->plainTextToken;
         $data['name'] = $employee->name;
         $data['email'] = $employee->email;
 
         return ApiResponse::sendResponse(200, 'Employee Logged In Successfully', $data);
     }
-
-    // public function logout(Request $request){
-
-    //     $request->user('employee')->currentAccessToken()->delete();
-    //     return ApiResponse::sendResponse(200,'Louged Out Successfully',[]);
-    // }
-    public function logout(Request $request)
+// Logout Function
+   public function logout(Request $request)
 {
-    $request->user('employee')->currentAccessToken()->delete();
+    $token = $request->user('employee')?->currentAccessToken();
+     if($token)
+     {
+        $token->delete();
+        return ApiResponse::sendResponse(200, 'Logged Out Successfully', []);
+     }
 
-    return response()->json([
-        'message' => 'Logged Out Successfully',
-        'data' => []
-    ], 200);
+     return ApiResponse::sendResponse(400, 'No active session found', []);
 }
 
 }
