@@ -9,6 +9,7 @@ use App\Http\Controllers\employee\auth\AuthController;
 use App\Http\Controllers\EmployeeComplaintsController;
 use App\Http\Controllers\EmployeeCyberComplaintsController;
 use App\Http\Controllers\SmartChatController;
+use App\Http\Controllers\UserComplaintController;
 use App\Models\ContactUs;
 
 /* Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -23,6 +24,8 @@ Route::post('/chat', [SmartChatController::class, 'chat']);
 
 ######### ContactUs Endpoint
 Route::post('/contactus',[ContactUsController::class, '__invoke']);
+######### Complaint Recource Endpoint
+Route::apiResource('User-Complaints',UserComplaintController::class)->only('index', 'store', 'show', 'destroy');
 ######### CyberComplaint Endpoint
 Route::post('/cybercomplaint',[CyberComplaintController::class,'store']);
 
