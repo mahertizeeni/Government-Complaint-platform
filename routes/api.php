@@ -11,6 +11,7 @@ use App\Http\Controllers\EmployeeCyberComplaintsController;
 use App\Http\Controllers\SmartChatController;
 use App\Http\Controllers\UserComplaintController;
 use App\Models\ContactUs;
+use Illuminate\Support\Facades\Http;
 
 /* Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -47,9 +48,30 @@ Route::prefix('employee')->group(function () {
     });
 });
 
+// Route::get('/test-groq-api', function () {
+//     $response = Http::withHeaders([
+//         'Authorization' => 'Bearer ' . env('GROQ_API_KEY'),
+//     ])->post('https://api.groq.com/openai/v1/chat/completions', [
+//         'model' => 'allam-2-7b',
+//         'messages' => [
+//             ['role' => 'system', 'content' => 'test'],
+//             ['role' => 'user', 'content' => 'Hello']
+//         ]
+//     ]);
+
+//     return [
+//         'status' => $response->status(),
+//         'body' => $response->body(),
+//     ];
+
+//     });
 
 
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
+
+    
+// use Illuminate\Support\Facades\Route;
 });
+
