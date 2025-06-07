@@ -4,13 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Category extends Model
+class City extends Model
 {
-    protected $fillable =[
-        'id',
-        'name',
-        'status',
-    ];
+    public function employees()
+    {
+        return $this->hasMany(Employee::class);
+    }
     public function complaints()
     {
         return $this->hasMany(Complaint::class);

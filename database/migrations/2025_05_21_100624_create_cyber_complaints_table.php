@@ -11,19 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('complaints', function (Blueprint $table) {
+        Schema::create('cyber_complaints', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('government_entity_id')->constrained()->onDelete('cascade');
-            $table->foreignId('city_id')->constrained()->onDelete('cascade');
-            $table->string('attachments')->nullable();
+            $table->enum('type',['انتحال شخصية','ابتزاز','احتيال','اختراق']);
             $table->text('description');
-            $table->boolean('is_emergency')->default(false);
+            $table->string('evidence_file')->nullable();
+            $table->string('related_link')->nullable();
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
-            $table->text('map_iframe')->nullable();
             $table->timestamps();
-
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('cyber_complaints');
+    }
 };

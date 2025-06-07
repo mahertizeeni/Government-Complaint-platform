@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use id;
 use App\Models\Complaint;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\ComplaintResource;
+
+
 
 class ComplaintController extends Controller
 {
@@ -24,15 +28,20 @@ class ComplaintController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'city_id' => 'required|exists:cities,id',
+        'entity_id' => 'required|exists:entities,id',
+
         ]);
 
         $complaint = Complaint::create(
             [
-            'title' => $request->title,
-            'description' => $request->description,
-            'user_id' => auth()->id(),  // إذا كنت تستخدم المصادقة
+        'title' => $request->title,
+        'description' => $request->description,
+        'city_id' => $request->city_id,
+        'entity_id' => $request->entity_id,
+        'user_id' => auth::id(),
         ]);
 
         return ApiResponse::sendResponse(201, 'Complaint created successfully', new ComplaintResource($complaint));
@@ -63,9 +72,9 @@ class ComplaintController extends Controller
         $complaint->delete();
         return ApiResponse::sendResponse(204, 'Complaint deleted successfully', []);
     }
-    public function category($category_id)
+    public function Entity($category_id)
     {
-        $complaint=Complaint::where('category_id',$category_id)->latest()->get();
+        $complaint=Complaint::where('category_id',$entity_id)->latest()->get();
         if(count($complaint) > 0)
         {
             return ApiResponse::sendResponse(200,'Complaint of complaint retrieved successfully',ComplaintResource::collection($complaint));

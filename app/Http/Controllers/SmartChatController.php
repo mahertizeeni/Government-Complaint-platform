@@ -2,14 +2,96 @@
 
 namespace App\Http\Controllers;
 
-use id;
+use App\Models\City;
+use Illuminate\Support\Facades\Auth;
+
 use App\Models\Complaint;
+use App\Models\GovernmentEntity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 
 class SmartChatController extends Controller
 {
+//     public function chat(Request $request)
+// {
+//     $userMessage = $request->input('message');
+
+//     if (!$userMessage) {
+//         return response()->json(['error' => 'الرسالة مطلوبة.'], 400);
+//     }
+
+//     $systemMessage = [
+//         'role' => 'system',
+//         'content' => "أنت مساعد ذكي لمنصة تقديم الشكاوى الإلكترونية.
+// دورك هو مساعدة المستخدمين في تعبئة تفاصيل شكواهم بطريقة مبسطة ومنظمة.
+// استخدم اللغة العربية الفصحى المبسطة، وتواصل بلطف واحترافية.
+// ابدأ دائماً برسالة ترحيبية قصيرة عندما تكون أول رسالة.
+// ثم اسأل المستخدم عن موضوع شكواه بشكل عام.
+
+// بعد أن يحدد المستخدم موضوع الشكوى:
+// - حاول أن تستنتج بنفسك الجهة المرتبطة بالشكوى بناءً على الموضوع (الخيارات: الكهرباء، المياه، البلدية، المالية، العقارية).
+// - إذا لم يكن واضحاً، اطلب من المستخدم تحديد الجهة بشكل مباشر.
+
+// بعد تحديد الجهة، تابع الأسئلة بالتسلسل التالي، سؤالاً واحداً في كل مرة، وانتظر إجابة المستخدم قبل المتابعة:
+// 1. ما هو موضوع الشكوى؟ (إذا لم يكن واضحًا من البداية)
+// 2. ماذا حدث بالتفصيل؟
+// 3. متى وأين وقع الحادث أو المشكلة؟
+// 4. من هم الأطراف أو الجهات المشاركة أو المسؤولة؟
+// 5. ما هو العنوان أو الموقع المرتبط بالشكوى؟
+// 6. هل لديك مستندات أو صور داعمة للشكوى؟
+
+// ملاحظات مهمة:
+// - لا ترسل أكثر من سؤال في نفس الوقت.
+// - لا تُنهي المحادثة إلا بعد جمع جميع المعلومات المذكورة.
+// - كن صبوراً وشجع المستخدم إذا كانت إجاباته قصيرة أو غير واضحة.
+// - إذا كانت إجابة المستخدم غامضة، اطلب منه التوضيح بطريقة مهذبة.
+
+// بعد جمع جميع التفاصيل:
+// - قم بتلخيص الشكوى بشكل مرتب وواضح.
+// - ثم اسأل المستخدم: (هل أنت متأكد أنك تريد تقديم الشكوى بهذه التفاصيل؟)
+
+// لا تقدم الشكوى قبل التأكد من موافقة المستخدم النهائية.
+// تصرف بلطف واحترام كامل طوال المحادثة."
+//     ];
+
+//     $chatHistory = Session::get('chat_history', []);
+//     $chatHistory[] = ['role' => 'user', 'content' => $userMessage];
+
+//     $messages = array_merge([$systemMessage], $chatHistory);
+
+//     $payload = [
+//         'model' => 'allam-2-7b',
+//         'messages' => $messages
+//     ];
+
+//     $apikey = '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'; // استبدله بالمفتاح الحقيقي
+
+//     try {
+//         $response = Http::timeout(30)
+//             ->connectTimeout(10)
+//             ->retry(3, 2000)
+//             ->withHeaders([
+//                 'Authorization' => 'Bearer ' . $apikey,
+//                 'Content-Type' => 'application/json',
+//             ])
+//             ->post('https://api.groq.com/openai/v1/chat/completions', $payload);
+
+//         if ($response->successful()) {
+//             $aiReply = $response->json()['choices'][0]['message']['content'];
+
+//             $chatHistory[] = ['role' => 'assistant', 'content' => $aiReply];
+//             Session::put('chat_history', $chatHistory);
+
+//             return response()->json(['ai_reply' => $aiReply]);
+//         } else {
+//             return response()->json(['error' => 'حدث خطأ أثناء الاتصال بخدمة Groq'], 500);
+//         }
+//     } catch (\Exception $e) {
+//         return response()->json(['error' => $e->getMessage()], 500);
+//     }
+// }
+
     
      
     public function chat(Request $request)
@@ -19,39 +101,40 @@ class SmartChatController extends Controller
         if (!$userMessage) {
             return response()->json(['error' => 'الرسالة مطلوبة.'], 400);
         }
+        // قواعد النظام
 
         $systemMessage = [
             'role' => 'system',
-            'content' => "أنت مساعد ذكي لمنصة تقديم الشكاوى الإلكترونية.
-دورك هو مساعدة المستخدمين في تعبئة تفاصيل شكواهم بطريقة مبسطة ومنظمة.
-استخدم اللغة العربية الفصحى المبسطة، وتواصل بلطف واحترافية.
-ابدأ دائماً برسالة ترحيبية قصيرة عندما تكون أول رسالة.
-ثم اسأل المستخدم عن موضوع شكواه بشكل عام.
+'content' => "أنت مساعد ذكي لمنصة تقديم الشكاوى الإلكترونية.
 
-بعد أن يحدد المستخدم موضوع الشكوى:
-- حاول أن تستنتج بنفسك الجهة المرتبطة بالشكوى بناءً على الموضوع (الخيارات: الكهرباء، المياه، البلدية، المالية، العقارية).
-- إذا لم يكن واضحاً، اطلب من المستخدم تحديد الجهة بشكل مباشر.
+دورك هو مساعدة المستخدم في جمع تفاصيل شكواه خطوة بخطوة بطريقة مبسطة ومنظمة.
 
-بعد تحديد الجهة، تابع الأسئلة بالتسلسل التالي، سؤالاً واحداً في كل مرة، وانتظر إجابة المستخدم قبل المتابعة:
-1. ما هو موضوع الشكوى؟ (إذا لم يكن واضحًا من البداية)
-2. ماذا حدث بالتفصيل؟
-3. متى وأين وقع الحادث أو المشكلة؟
-4. من هم الأطراف أو الجهات المشاركة أو المسؤولة؟
-5. ما هو العنوان أو الموقع المرتبط بالشكوى؟
-6. هل لديك مستندات أو صور داعمة للشكوى؟
+**قواعد سلوك صارمة يجب اتباعها:**
 
-ملاحظات مهمة:
-- لا ترسل أكثر من سؤال في نفس الوقت.
-- لا تُنهي المحادثة إلا بعد جمع جميع المعلومات المذكورة.
-- كن صبوراً وشجع المستخدم إذا كانت إجاباته قصيرة أو غير واضحة.
-- إذا كانت إجابة المستخدم غامضة، اطلب منه التوضيح بطريقة مهذبة.
+1. **ابدأ دائماً** برسالة ترحيبية قصيرة إذا كانت هذه أول رسالة.
+2. **اسأل سؤالاً واحداً فقط في كل مرة.** لا تسأل أكثر من سؤال معاً.
+3. **لا تنتقل للسؤال التالي** إلا بعد أن يجيب المستخدم.
+4. **كن صبوراً ومشجعاً،** خاصة إذا كانت الإجابة قصيرة أو غير واضحة.
+5. **إذا كانت الإجابة غير مفهومة،** اطلب التوضيح بلطف.
+6. **لا تُنهِ المحادثة** حتى تجمع كل المعلومات التالية، بالترتيب:
 
-بعد جمع جميع التفاصيل:
-- قم بتلخيص الشكوى بشكل مرتب وواضح.
-- ثم اسأل المستخدم: (هل أنت متأكد أنك تريد تقديم الشكوى بهذه التفاصيل؟)
+   - ما هو موضوع الشكوى؟
+   - ماذا حدث بالتفصيل؟
+   - متى وأين وقع الحادث أو المشكلة؟
+   - من هم الأطراف أو الجهات المشاركة أو المسؤولة؟
+   - ما هو العنوان أو الموقع المرتبط بالشكوى؟
+   - هل لديك مستندات أو صور داعمة للشكوى؟
 
-لا تقدم الشكوى قبل التأكد من موافقة المستخدم النهائية.
-تصرف بلطف واحترام كامل طوال المحادثة."
+7. بعد جمع كل المعلومات، **قم بتلخيص الشكوى بشكل منظم وواضح.**
+8. اسأل المستخدم في النهاية:  
+   **هل أنت متأكد أنك تريد تقديم الشكوى بهذه التفاصيل؟**
+
+9. لا تقم بتقديم الشكوى فعلياً، فقط انتظر الموافقة النهائية من المستخدم.
+
+**التزم باللغة العربية الفصحى المبسطة، وتحدث بلطف واحترافية.**
+
+إذا خالفت أي قاعدة من هذه القواعد، فإن ردك غير مقبول."
+
         ];
 
         $payload = [
@@ -74,11 +157,30 @@ class SmartChatController extends Controller
 
             if ($response->successful()) {
                 $aiReply = $response->json()['choices'][0]['message']['content'];
-                if ($userMessage == 'المدينة؟') {
-                    Session::put('city', $aiReply);  // مثال على تخزين المدينة
-                }
+                // تخزين المدينة في الجلسة
+                if ($userMessage == 'المدينة') {
+                   $city =City::where('name',$userMessage)->first();
+                   if($city){
+                    Session::put('city_id',$city->id);
+                    $aiReply = "تم تحديد الجهة".$city->name ; 
+                   }
+                   else {
+                    $allCities=City::pluck('name')->toarray();
+                    $aiReply = "لم يتم ايجاد المدينة الرجاء اختيار احدى ".implode(', ',$allCities);
+                   }}
+                //    تخزين الجهة في الجلسة
+                   
                 if ($userMessage == 'الجهة') {
-                    Session::put('intity', $aiReply);  // مثال على تخزين المدينة
+                   $governmentEntity =GovernmentEntity::where('name',$userMessage)->first();
+                   if($governmentEntity){
+                    Session::put('government_entity_id',$governmentEntity->id);
+                    $aiReply = "تم تحديد الجهة".$governmentEntity->name ; 
+                   }
+                   else {
+                    $allEntities=GovernmentEntity::pluck('name')->toarray();
+                    $aiReply = "لم يتم ايجاد الجهة الرجاء اختيار احدى ".implode(', ',$allEntities);
+                   }
+                   
                 }
 
                 return response()->json([
@@ -95,16 +197,16 @@ class SmartChatController extends Controller
     public function submitComplaint(Request $request)
     {
         // استرجاع البيانات من الجلسة
-        $city = Session::get('city');
-        $intity = Session::get('intity');
+        $city_id = Session::get('city_id');
+        $government_entity_id = Session::get('government_entity_id');
         $description = $request->input('description');
         $attachments = ''; 
 
         // تخزين الشكوى في قاعدة البيانات
         $complaint = new Complaint();
-        // $complaint->user_id = auth()->id();  
-        $complaint->city = $city;
-        $complaint->intity = $intity;
+        $complaint->user_id = auth::id();  
+        $complaint->city_id = $city_id;
+        $complaint->government_entity_id = $government_entity_id;
         $complaint->description = $description;
         $complaint->attachments = $attachments;
         $complaint->is_emergency = false;  // إذا كان هناك طارئ
