@@ -20,13 +20,6 @@ Route::controller(AuthController::class)->group(function()
     Route::post('logout','logout')->middleware('auth:sanctum');
     Route::post('resetpassword','sendResetLink');
 });
- Route::middleware('auth:sanctum')->prefix('complaint')->controller(ComplaintController::class)->group(function()
-{
-    Route::get('/','index');
-    Route::get('/category/{category_id}','category');
-    Route::post('/','store');
-
-});
 //=============Category Api
 /* Route::get('/category',CategoryController::class); */
 
