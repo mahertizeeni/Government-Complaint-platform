@@ -30,13 +30,8 @@ Route::post('/contactus',[ContactUsController::class, '__invoke']);
 Route::apiResource('User-Complaints',UserComplaintController::class)->only('index', 'store', 'show', 'destroy');
 ######### CyberComplaint Endpoint
 Route::post('/cybercomplaint',[CyberComplaintController::class,'store']);
-Route::get('/test-env', function() {
-    return env('OPENROUTER_API_KEY', 'not found');
-});
 
-Route::controller(AuthController::class)->group(function(){
-    
-});
+
 ######## Employee account
 Route::prefix('employee')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
@@ -46,7 +41,9 @@ Route::prefix('employee')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         #### Get Complaints Gor Employee 
         Route::get('complaints',[EmployeeComplaintsController::class,'getComplaints']);
+        #### Get Suggestion Gor Employee 
         Route::get('Suggestion',[EmployeeSuggestionController::class,'getSuggestions']);
+        #### Get Cybercomplaints Gor Employee 
         Route::get('Cybercomplaints',[EmployeeCyberComplaintsController::class,'getComplaints']);
         #### Update Status
         Route::put('complaints/{id}/status',[EmployeeComplaintsController::class,'updateStatus']);
@@ -60,6 +57,6 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 
     
-// use Illuminate\Support\Facades\Route;
+
 });
 
