@@ -20,6 +20,7 @@ class EmployeeComplaintsController extends Controller
     $complaints = Complaint::where('government_entity_id',$employee->government_entity_id)
     ->where('city_id',$employee->city_id)
     ->select('id','description','status','attachments','map_iframe','is_emergency','created_at')
+    ->orderBy('is_emergency','desc')
     ->get() ;
   
     return ApiResponse::sendResponse(200,'Get Complaints',$complaints);

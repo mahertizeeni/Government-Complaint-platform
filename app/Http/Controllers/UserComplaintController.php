@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\ApiResponse;
-use App\Http\Requests\StoreComplaintRequest;
-use App\Http\Resources\ComplaintResource;
 use App\Models\Complaint;
+use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use App\Http\Resources\ComplaintResource;
+use App\Http\Requests\StoreComplaintRequest;
+use App\Services\AiComplaintAnalyzer;
 
 class UserComplaintController extends Controller
 {
@@ -23,22 +25,34 @@ class UserComplaintController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreComplaintRequest $request)
+  
+
+
+    public function store(StoreComplaintRequest $request,AiComplaintAnalyzer $analyzer)
     {
         $validated = $request->validated();
-        $validated['user_id']=Auth::id();
+        // $validated['user_id']=Auth::id();
+        $validated['user_id']=66;
         if($request->hasFile('attachments'))
         {
             $file = $request->file('attachments');
             $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
             $filePath = $file->storeAs('uploads',$fileName,'public');
             $validated['attachments']=$filePath;
+           
         }
         $complaint = Complaint::create($validated);
+        $aiRating=$analyzer->rateEmergencyLevel($complaint->description);
+        if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
+        $complaint->is_emergency = $aiRating;
+        $complaint->save();
+
         return ApiResponse::sendResponse(201,'Complaint Added Successfully',new ComplaintResource($complaint));
 
         
-    }
+    }}
+
+
 
     /**
      * Display the specified resource.

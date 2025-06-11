@@ -65,7 +65,7 @@ class SmartChatController extends Controller
 //         'messages' => $messages
 //     ];
 
-//     $apikey = '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'; // استبدله بالمفتاح الحقيقي
+//     $apikey = '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'; 
 
 //     try {
 //         $response = Http::timeout(30)
@@ -209,7 +209,7 @@ class SmartChatController extends Controller
         $complaint->government_entity_id = $government_entity_id;
         $complaint->description = $description;
         $complaint->attachments = $attachments;
-        $complaint->is_emergency = false;  // إذا كان هناك طارئ
+        $complaint->is_emergency = false;  
         $complaint->status = 'pending';
         $complaint->save();
 
