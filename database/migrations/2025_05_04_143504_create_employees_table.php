@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->String('name');
             $table->string('email')->unique();
-            $table->enum('intity',['الكهرباء','المياه','البلدية','المالية','العقارية']);
+            $table->foreignId('government_entity_id')->constrained()->onDelete('cascade');
+            $table->foreignId('city_id')->constrained()->onDelete('cascade');
             $table->string('password');
             $table->timestamps();
         });

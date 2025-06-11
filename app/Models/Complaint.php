@@ -10,10 +10,8 @@ class Complaint extends Model
 {
     use HasFactory;
 
-    // تحديد الجدول إذا كان مختلفًا عن الاسم الافتراضي
     protected $table = 'complaints';
 
-    // تحديد الحقول القابلة للتعبئة
     protected $guarded = ['id'];
      protected $fillable = [
         'title',
@@ -32,8 +30,8 @@ class Complaint extends Model
     return $this->belongsTo(City::class);
     }
 
-public function entity()
+public function governmentEntity()
     {
-    return $this->belongsTo(Entity::class);
+    return $this->belongsTo(GovernmentEntity::class);
     }
 }
