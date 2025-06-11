@@ -22,6 +22,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
             $table->text('map_iframe')->nullable();
             $table->timestamps();
+
         });
     }
 

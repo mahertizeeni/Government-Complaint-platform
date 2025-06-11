@@ -13,17 +13,25 @@ class Complaint extends Model
     protected $table = 'complaints';
 
     protected $guarded = ['id'];
-    
-    public function governmentEntity()
-    {
-        return $this->belongsTo(GovernmentEntity::class);
-    }
-    public function City()
-    {
-        return $this->belongsTo(City::class);
-    }
-    public function User()
+     protected $fillable = [
+        'title',
+        'description',
+        'city_id',
+        'entity_id',
+        'user_id', // إذا كنت تريد ربط الشكوى بالمستخدم
+    ];
+
+     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function city()
+    {
+    return $this->belongsTo(City::class);
+    }
+
+public function governmentEntity()
+    {
+    return $this->belongsTo(GovernmentEntity::class);
     }
 }

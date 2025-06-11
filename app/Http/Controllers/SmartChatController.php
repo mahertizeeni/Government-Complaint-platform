@@ -65,7 +65,7 @@ class SmartChatController extends Controller
 //         'messages' => $messages
 //     ];
 
-//     $apikey = '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'; 
+//     $apikey = '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';
 
 //     try {
 //         $response = Http::timeout(30)
@@ -92,8 +92,8 @@ class SmartChatController extends Controller
 //     }
 // }
 
-    
-     
+
+
     public function chat(Request $request)
     {
         $userMessage = $request->input('message');
@@ -126,7 +126,7 @@ class SmartChatController extends Controller
    - هل لديك مستندات أو صور داعمة للشكوى؟
 
 7. بعد جمع كل المعلومات، **قم بتلخيص الشكوى بشكل منظم وواضح.**
-8. اسأل المستخدم في النهاية:  
+8. اسأل المستخدم في النهاية:
    **هل أنت متأكد أنك تريد تقديم الشكوى بهذه التفاصيل؟**
 
 9. لا تقم بتقديم الشكوى فعلياً، فقط انتظر الموافقة النهائية من المستخدم.
@@ -162,25 +162,25 @@ class SmartChatController extends Controller
                    $city =City::where('name',$userMessage)->first();
                    if($city){
                     Session::put('city_id',$city->id);
-                    $aiReply = "تم تحديد الجهة".$city->name ; 
+                    $aiReply = "تم تحديد الجهة".$city->name ;
                    }
                    else {
                     $allCities=City::pluck('name')->toarray();
                     $aiReply = "لم يتم ايجاد المدينة الرجاء اختيار احدى ".implode(', ',$allCities);
                    }}
                 //    تخزين الجهة في الجلسة
-                   
+
                 if ($userMessage == 'الجهة') {
                    $governmentEntity =GovernmentEntity::where('name',$userMessage)->first();
                    if($governmentEntity){
                     Session::put('government_entity_id',$governmentEntity->id);
-                    $aiReply = "تم تحديد الجهة".$governmentEntity->name ; 
+                    $aiReply = "تم تحديد الجهة".$governmentEntity->name ;
                    }
                    else {
                     $allEntities=GovernmentEntity::pluck('name')->toarray();
                     $aiReply = "لم يتم ايجاد الجهة الرجاء اختيار احدى ".implode(', ',$allEntities);
                    }
-                   
+
                 }
 
                 return response()->json([
@@ -192,7 +192,7 @@ class SmartChatController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
-        
+
     }
     public function submitComplaint(Request $request)
     {
@@ -200,16 +200,16 @@ class SmartChatController extends Controller
         $city_id = Session::get('city_id');
         $government_entity_id = Session::get('government_entity_id');
         $description = $request->input('description');
-        $attachments = ''; 
+        $attachments = '';
 
         // تخزين الشكوى في قاعدة البيانات
         $complaint = new Complaint();
-        $complaint->user_id = auth::id();  
+        $complaint->user_id = auth::id();
         $complaint->city_id = $city_id;
         $complaint->government_entity_id = $government_entity_id;
         $complaint->description = $description;
         $complaint->attachments = $attachments;
-        $complaint->is_emergency = false;  
+        $complaint->is_emergency = false;
         $complaint->status = 'pending';
         $complaint->save();
 
