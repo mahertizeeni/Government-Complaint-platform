@@ -34,8 +34,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # تثبيت الحزم عن طريق Composer (بدون الحزم الخاصة بالتطوير)
 RUN composer install --no-dev --optimize-autoloader
 
-# توليد مفتاح التطبيق (ممكن تستخدم يدوي لاحقاً أو تترك Laravel يديره)
-RUN php artisan key:generate
+# لا توليد مفتاح هنا - تولده يدوياً وتضيفه كمتغير بيئة
 
 # فتح البورت 80
 EXPOSE 80
