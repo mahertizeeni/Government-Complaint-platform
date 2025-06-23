@@ -6,7 +6,6 @@ use App\Models\Complaint;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use App\Http\Resources\ComplaintResource;
 use App\Http\Requests\StoreComplaintRequest;
 use App\Services\AiComplaintAnalyzer;
@@ -31,8 +30,8 @@ class UserComplaintController extends Controller
     public function store(StoreComplaintRequest $request,AiComplaintAnalyzer $analyzer)
     {
         $validated = $request->validated();
-        // $validated['user_id']=Auth::id();
-        $validated['user_id']=66;
+        $validated['user_id']=Auth::id();
+        
         if($request->hasFile('attachments'))
         {
             $file = $request->file('attachments');
