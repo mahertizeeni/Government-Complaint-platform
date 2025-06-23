@@ -22,7 +22,7 @@ class EmployeeComplaintsController extends Controller
     ->select('id','description','status','attachments','map_iframe','is_emergency','created_at')
     ->orderBy('is_emergency','desc')
     ->get() ;
-  
+
     return ApiResponse::sendResponse(200,'Get Complaints',$complaints);
 
  }

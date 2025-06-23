@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\employee\auth;
 
+use id;
 use App\Models\Employee;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ use function Laravel\Prompts\error;
 class AuthController extends Controller
 {
     public function register(EmployeeRegisterRequest $request)
-    { 
+    {
         $validated = $request->validated();
     // التحقق من اسم الجهة الحكومية المدخلة
        $governmentEntity = GovernmentEntity::where('name',$validated['government_entity'])->first();
@@ -25,7 +26,7 @@ class AuthController extends Controller
     if (!$governmentEntity)
      {
         return ApiResponse::sendResponse(404, 'Government Entity Not Found', []);
-     }  
+     }
       $government_entity_id = $governmentEntity->id;
 
       $city=City::where('name',$validated['city'])->first();
