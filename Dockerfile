@@ -1,28 +1,27 @@
-FROM php:8.2-apache
+FROM php:8.3-apache
 
-# Install required packages
+# تثبيت الحزم المطلوبة
 RUN apt-get update && apt-get install -y \
     zip unzip git curl libzip-dev libonig-dev libxml2-dev libpq-dev \
     && docker-php-ext-install pdo pdo_mysql zip
 
-# Enable Apache mod_rewrite
+# تفعيل Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Set working directory
+# مجلد العمل
 WORKDIR /var/www/html
 
-# Copy app source code
+# نسخ ملفات المشروع
 COPY . /var/www/html
 
-# Fix permissions
+# صلاحيات الملفات
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
 
-# Copy and install Composer
+# نسخ Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader
 
-# Generate app key (safe to repeat, Laravel handles it)
-RUN php artisan key:generate
+# تثبيت البكجات بدون dev
+RUN composer install --no-dev --optimize-autoloader
 
 EXPOSE 80
