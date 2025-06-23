@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: gov-laravel-api
+    env: docker
+    plan: free
+    branch: develop
+    dockerfilePath: ./Dockerfile
+
