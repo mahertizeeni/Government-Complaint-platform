@@ -3,7 +3,7 @@ FROM php:8.2-apache
 # تثبيت الحزم المطلوبة
 RUN apt-get update && apt-get install -y \
     zip unzip git curl libzip-dev libonig-dev libxml2-dev libpq-dev \
-    && docker-php-ext-install pdo pdo_mysql zip
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip
 
 # تفعيل mod_rewrite في Apache
 RUN a2enmod rewrite

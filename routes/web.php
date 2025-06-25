@@ -6,6 +6,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/',function (){
 dd('Welcome to Government Complaints Platform');
 });
+Route::get('/test-redis', function() {
+    try {
+        Redis::set('test_key', 'Hello Redis!');
+        return Redis::get('test_key');
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});
 
 // Route::get('/test-redis', function() {
 //     try {
