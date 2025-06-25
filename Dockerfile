@@ -1,40 +1,42 @@
 FROM php:8.2-apache
 
-# تثبيت الحزم المطلوبة
+# تثبيت الحزم المطلوبة والامتدادات الخاصة بـ Laravel + PostgreSQL
 RUN apt-get update && apt-get install -y \
     zip unzip git curl libzip-dev libonig-dev libxml2-dev libpq-dev \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip \
+    && docker-php-ext-enable pdo_pgsql
 
-# تفعيل mod_rewrite في Apache
+# تفعيل mod_rewrite في Apache (مهم للـ Laravel routes)
 RUN a2enmod rewrite
 
-# تعديل DocumentRoot ليشير لمجلد public (مهم جداً للـ Laravel)
+# تعيين اسم السيرفر لتجنب التحذير في Apache
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# تعديل Apache DocumentRoot ليشير إلى مجلد public
 RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf
 
-# السماح بالوصول للمجلد public وتمكين .htaccess
+# تمكين .htaccess في مجلد public
 RUN echo '<Directory /var/www/html/public>\n\
     AllowOverride All\n\
     Require all granted\n\
 </Directory>' > /etc/apache2/conf-available/laravel-permissions.conf \
     && a2enconf laravel-permissions
 
-# تعيين مجلد العمل
+# تعيين مجلد العمل داخل الحاوية
 WORKDIR /var/www/html
 
-# نسخ ملفات المشروع
+# نسخ مشروع Laravel إلى الحاوية
 COPY . /var/www/html
 
-# تصحيح الصلاحيات
+# ضبط صلاحيات الملفات
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
 
-# نسخ Composer من صورة رسمية أخرى
+# نسخ Composer من الصورة الرسمية
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# تثبيت الحزم عن طريق Composer (بدون الحزم الخاصة بالتطوير)
+# تثبيت الحزم (بدون حزم التطوير لتسريع الأداء)
 RUN composer install --no-dev --optimize-autoloader
 
-# لا توليد مفتاح هنا - تولده يدوياً وتضيفه كمتغير بيئة
-
-# فتح البورت 80
+# فتح المنفذ 80 لحاوية Apache
 EXPOSE 80
