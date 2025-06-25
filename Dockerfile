@@ -3,12 +3,16 @@ FROM php:8.2-apache
 # تثبيت الحزم المطلوبة
 RUN apt-get update && apt-get install -y \
     zip unzip git curl libzip-dev libonig-dev libxml2-dev libpq-dev \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip \
+    && docker-php-ext-enable pdo_pgsql
 
 # تفعيل mod_rewrite في Apache
 RUN a2enmod rewrite
 
-# تعديل DocumentRoot ليشير لمجلد public (مهم جداً للـ Laravel)
+# تعيين اسم السيرفر لتجنب التحذير في Apache
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# تعديل Apache DocumentRoot ليشير إلى مجلد public
 RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf
 
 # السماح بالوصول للمجلد public وتمكين .htaccess
