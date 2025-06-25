@@ -3,7 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redis;
 
-
+Route::get('/',function (){
+dd('Welcome to Government Complaints Platform');
+});
 Route::get('/test-redis', function() {
     try {
         Redis::set('test_key', 'Hello Redis!');

@@ -1,28 +1,38 @@
 FROM php:8.2-apache
 
-# Install required packages
+# تثبيت الحزم المطلوبة والامتدادات الخاصة بـ Laravel + PostgreSQL
 RUN apt-get update && apt-get install -y \
     zip unzip git curl libzip-dev libonig-dev libxml2-dev libpq-dev \
-    && docker-php-ext-install pdo pdo_mysql zip
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip
 
-# Enable Apache mod_rewrite
+# تفعيل mod_rewrite في Apache (مهم للـ Laravel routes)
 RUN a2enmod rewrite
 
-# Set working directory
+# تعديل Apache DocumentRoot ليشير إلى مجلد public
+RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf
+
+# تمكين .htaccess في مجلد public
+RUN echo '<Directory /var/www/html/public>\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' > /etc/apache2/conf-available/laravel-permissions.conf \
+    && a2enconf laravel-permissions
+
+# تعيين مجلد العمل داخل الحاوية
 WORKDIR /var/www/html
 
-# Copy app source code
+# نسخ مشروع Laravel إلى الحاوية
 COPY . /var/www/html
 
-# Fix permissions
+# ضبط صلاحيات الملفات
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
 
-# Copy and install Composer
+# نسخ Composer من الصورة الرسمية
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# تثبيت الحزم (بدون حزم التطوير لتسريع الأداء)
 RUN composer install --no-dev --optimize-autoloader
 
-# Generate app key (safe to repeat, Laravel handles it)
-RUN php artisan key:generate
-
+# فتح المنفذ 80 لحاوية Apache
 EXPOSE 80
