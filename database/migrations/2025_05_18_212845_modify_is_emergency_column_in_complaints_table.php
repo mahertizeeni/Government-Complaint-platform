@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('complaints', function (Blueprint $table) {
-            $table->enum('is_emergency',['1','2','3'])->default('1')->change();
+    $table->string('is_emergency', 1)->default('1')->change();
         });
     }
 
