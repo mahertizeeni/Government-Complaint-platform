@@ -23,7 +23,7 @@ class StoreComplaintRequest extends FormRequest
     {
         return [
             'government_entity_id'=>'required|exists:government_entities,id',
-            'city_id'=>'required|exists:Cities,id',
+            'city_id'=>'required|exists:cities,id',
             'attachments' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048',
             'description'=>'required|string|min:10',
             'map_iframe' => 'nullable|string',
