@@ -19,11 +19,18 @@ return new class extends Migration
             $table->string('attachments')->nullable();
             $table->text('description');
             $table->boolean('is_emergency')->default(false);
-            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
+$table->string('status')->default('pending');
             $table->text('map_iframe')->nullable();
             $table->timestamps();
 
         });
     }
+public function down(): void
+{Schema::table('complaints', function (Blueprint $table) {
+    $table->dropForeign(['city_id']);
+});
+Schema::dropIfExists('complaints');
 
+
+}
 };
