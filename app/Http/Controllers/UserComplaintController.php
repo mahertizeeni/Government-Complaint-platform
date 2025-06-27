@@ -18,7 +18,7 @@ class UserComplaintController extends Controller
     public function index()
     {
         $complaints =Complaint::where('user_id',Auth::id())->get(); 
-        return ApiResponse::sendResponse(200,'The Complaints For User',new ComplaintResource($complaints));
+    return ApiResponse::sendResponse(200, 'The Complaints For User', ComplaintResource::collection($complaints));
     }
 
     /**
@@ -58,7 +58,10 @@ class UserComplaintController extends Controller
      */
     public function show($id)
     {
-        $complaint = Complaint::where('user_id', Auth::id())->firstOrFail($id);
+        $complaint = Complaint::where('user_id', Auth::id())
+    ->where('id', $id)
+    ->firstOrFail();
+
         return $complaint;
     }
 

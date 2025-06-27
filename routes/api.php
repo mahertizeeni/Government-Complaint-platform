@@ -13,6 +13,7 @@ use App\Http\Controllers\employee\auth\AuthController;
 use App\Http\Controllers\EmployeeComplaintsController;
 use App\Http\Controllers\EmployeeSuggestionController;
 use App\Http\Controllers\EmployeeCyberComplaintsController;
+use Laravel\Sanctum\Sanctum;
 
 /* Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -32,10 +33,10 @@ Route::get('/chatr', [SmartChatController::class, 'resetChat']);
 ######### ContactUs Endpoint
 Route::post('/contactus',[ContactUsController::class, '__invoke']);
 ######### Complaint Recource Endpoint
-Route::apiResource('User-Complaints',UserComplaintController::class)->only('index', 'store', 'show', 'destroy');
+Route::apiResource('User-Complaints',UserComplaintController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum');
 ######### CyberComplaint Endpoint
 // Route::post('/cybercomplaint',[CyberComplaintController::class,'store']);
-Route::apiResource('User-CyberComplaint',CyberComplaintController::class)->only('index', 'store', 'show', 'destroy');
+Route::apiResource('User-CyberComplaint',CyberComplaintController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum');
 
 ######## Employee account
 Route::prefix('employee')->group(function () {
@@ -47,9 +48,9 @@ Route::prefix('employee')->group(function () {
         #### Get Complaints Gor Employee 
         Route::get('complaints',[EmployeeComplaintsController::class,'getComplaints']);
         #### Get Suggestion Gor Employee 
-        Route::get('Suggestion',[EmployeeSuggestionController::class,'getSuggestions']);
+        Route::get('suggestion',[EmployeeSuggestionController::class,'getSuggestions']);
         #### Get Cybercomplaints Gor Employee 
-        Route::get('Cybercomplaints',[EmployeeCyberComplaintsController::class,'getComplaints']);
+        Route::get('cybercomplaints',[EmployeeCyberComplaintsController::class,'getComplaints']);
         #### Update Status
         Route::put('complaints/{id}/status',[EmployeeComplaintsController::class,'updateStatus']);
     });
