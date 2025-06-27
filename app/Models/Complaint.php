@@ -17,7 +17,7 @@ class Complaint extends Model
         'title',
         'description',
         'city_id',
-        'entity_id',
+        'government_entity_id',
         'user_id', // إذا كنت تريد ربط الشكوى بالمستخدم
     ];
 

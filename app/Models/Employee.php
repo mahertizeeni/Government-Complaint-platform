@@ -53,12 +53,4 @@ class Employee extends Authenticatable
         return $this->belongsTo(City::class);
     }
     
-    public function governmentEntity()
-    {
-        return $this->belongsTo(GovernmentEntity::class);
-    }
-    public function City()
-    {
-        return $this->belongsTo(City::class);
-    }
 }
