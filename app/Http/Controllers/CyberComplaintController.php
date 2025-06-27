@@ -18,7 +18,7 @@ class CyberComplaintController extends Controller
       public function index()
     {
         $complaints =CyberComplaint::where('user_id',Auth::id())->get(); 
-        return ApiResponse::sendResponse(200,'The CyberComplaints For User',new CyberComplaintResource($complaints));
+        return ApiResponse::sendResponse(200, 'The CyberComplaints For User', CyberComplaintResource::collection($complaints));
     }
     /**
      * Show the form for creating a new resource.
@@ -41,19 +41,23 @@ class CyberComplaintController extends Controller
             $data['evidence_file']=$filePath;
         }
         $data['user_id']= Auth::id() ;
-        CyberComplaint::create($data);
+        $complaint = CyberComplaint::create($data); 
+return ApiResponse::sendResponse(201,'Complaint Added Successfully', new CyberComplaintResource($complaint));
 
-        return ApiResponse::sendResponse(201,'Complaint Added Successfully',new CyberComplaintResource($data));
     }
 
     /**
      * Display the specified resource.
      */
     public function show($id)
-    {
-        $Cybercomplaint = CyberComplaint::where('user_id', Auth::id())->firstOrFail($id);
-        return $Cybercomplaint;
-    }
+{
+    $Cybercomplaint = CyberComplaint::where('user_id', Auth::id())
+                                     ->where('id', $id)
+                                     ->firstOrFail();
+
+    return ApiResponse::sendResponse(200, 'CyberComplaint Details', new CyberComplaintResource($Cybercomplaint));
+}
+
 
     /**
      * Show the form for editing the specified resource.
