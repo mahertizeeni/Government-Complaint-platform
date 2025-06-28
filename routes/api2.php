@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->prefix('Suggestion')->controller(SuggestionCo
 //==============]Admin Login Api
 Route::prefix('admin')->controller(AdminAuthController::class)->group(function () {
     Route::post('login', 'login');
+    Route::post('register', 'register');
 });
 //==============]Dashboard Api
 Route::prefix('admin')->middleware(['auth:sanctum', 'IsAdmin'])->group(function () {

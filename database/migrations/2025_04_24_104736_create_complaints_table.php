@@ -18,8 +18,9 @@ return new class extends Migration
             $table->foreignId('city_id')->constrained()->onDelete('cascade');
             $table->string('attachments')->nullable();
             $table->text('description');
-            $table->boolean('is_emergency')->default(false);
-$table->string('status')->default('pending');
+            $table->enum('is_emergency', ['1', '2', '3'])->default('1');
+            $table->boolean('anonymous')->default(false);
+            $table->string('status')->default('pending');
             $table->text('map_iframe')->nullable();
             $table->timestamps();
 

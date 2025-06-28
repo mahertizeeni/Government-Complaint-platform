@@ -23,6 +23,7 @@ class ComplaintResource extends JsonResource
             'Description' => $this->description,
             'is_emergency' => $this->is_emergency,
             'status' => $this->status,
+            'ananemous'=>$this->ananemous,
             'map_iframe' => $this->map_iframe,
         ];
     }
