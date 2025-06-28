@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Http\Middleware\IsAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\SuggestionController;
@@ -36,7 +37,7 @@ Route::prefix('admin')->controller(AdminAuthController::class)->group(function (
     Route::post('register', 'register');
 });
 //==============]Dashboard Api
-Route::prefix('admin')->middleware(['auth:sanctum', 'IsAdmin'])->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', IsAdmin::class])->group(function () {
     // لوحات التحكم
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/dashboard/suggestions', [DashboardController::class, 'suggestions']);
