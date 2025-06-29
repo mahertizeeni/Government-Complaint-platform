@@ -53,8 +53,12 @@ Route::prefix('employee')->group(function () {
         Route::get('suggestion',[EmployeeSuggestionController::class,'getSuggestions']);
         #### Get Cybercomplaints Gor Employee 
         Route::get('cybercomplaints',[EmployeeCyberComplaintsController::class,'getComplaints']);
-        #### Update Status
+         #### Get cyberComplaint Gor Employee By id 
+        Route::get('cybercomplaint/{id}',[EmployeeCyberComplaintsController::class,'show']);
+        #### Update Complaint Status
         Route::put('complaints/{id}/status',[EmployeeComplaintsController::class,'updateStatus']);
+        #### Update CyberComplaint Status
+        Route::put('cybercomplaints/{id}',[EmployeeCyberComplaintsController::class,'updateStatus']);
     });
 });
 

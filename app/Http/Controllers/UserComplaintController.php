@@ -26,39 +26,29 @@ class UserComplaintController extends Controller
      */
 
 
-   public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analyzer)
-{
-    $validated = $request->validated();
-    $validated['user_id'] = Auth::id();
-    
-   if ($request->hasFile('attachments')) {
-    $file = $request->file('attachments');
-    $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-    $filePath = $file->storeAs('uploads', $fileName, 'public');
-    $validated['attachments'] = $filePath; // مثلاً: uploads/image_123.jpg
-}
-
-    // تعيين user_id حسب كونها شكوى مجهولة أو لا
-    $validated['user_id'] = ($validated['anonymous'] ?? false) ? null : Auth::id();
-
-    /* $validated = $request->validated();
-    $validated['anonymous'] = (int) $validated['anonymous']; // تأكيد أنها رقم 0 أو 1
-    $validated['user_id'] = $validated['anonymous'] === 1 ? null : Auth::id(); */
-
-
-    // إنشاء الشكوى
-    $complaint = Complaint::create($validated);
-
-    // تحليل الطارئة عبر الذكاء الاصطناعي
-    $aiRating = $analyzer->rateEmergencyLevel($complaint->description);
-    if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
+    public function store(StoreComplaintRequest $request,AiComplaintAnalyzer $analyzer)
+    {
+        $validated = $request->validated();
+        $validated['user_id']=Auth::id();
+        
+        if($request->hasFile('attachments'))
+        {
+            $file = $request->file('attachments');
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $filePath = $file->storeAs('uploads',$fileName,'public');
+            $validated['attachments']=$filePath;
+           
+        }
+        $complaint = Complaint::create($validated);
+        $aiRating=$analyzer->rateEmergencyLevel($complaint->description);
+        if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
         $complaint->is_emergency = $aiRating;
         $complaint->save();
-    }
 
-    return ApiResponse::sendResponse(201, 'Complaint Added Successfully', new ComplaintResource($complaint));
-}
+        return ApiResponse::sendResponse(201,'Complaint Added Successfully',new ComplaintResource($complaint));
 
+        
+    }}
 
     public function getAnonymousComplaints()
     {
@@ -71,19 +61,14 @@ class UserComplaintController extends Controller
     /**
      * Display the specified resource.
      */
-   public function show($id)
-{
-    $complaint = Complaint::where('user_id', Auth::id())
-        ->where('id', $id)
-        ->first();
+    public function show($id)
+    {
+        $complaint = Complaint::where('user_id', Auth::id())
+    ->where('id', $id)
+    ->firstOrFail();
 
-    if (!$complaint) {
-        return ApiResponse::sendResponse(404, 'Complaint not found', []);
+        return $complaint;
     }
-
-    return ApiResponse::sendResponse(200, 'Complaint retrieved successfully', $complaint);
-}
-
 
     /**
      * Update the specified resource in storage.

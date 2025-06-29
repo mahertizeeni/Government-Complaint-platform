@@ -23,41 +23,29 @@ class UserCyberComplaintController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-  public function store(StoreCyberComplaintRequest $request)
-{
-    $data = $request->validated();
+   public function store(StoreCyberComplaintRequest $request)
+    { $data = $request->validated();
+        if($request->hasFile('evidence_file'))
+        {
+            $file = $request->file('evidence_file');
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $filePath = $file->storeAs('uploads',$fileName,'public');
+            $data['evidence_file']=$filePath;
+        }
+        $data['user_id']= Auth::id() ;
+        CyberComplaint::create($data);
 
-    if ($request->hasFile('evidence_file')) {
-        $file = $request->file('evidence_file');
-        $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-        $filePath = $file->storeAs('uploads', $fileName, 'public');
-        $data['evidence_file'] = $filePath;
+        return ApiResponse::sendResponse(201,'Complaint Sent Successfully ',new CyberComplaintResource($data));
     }
-
-    $data['user_id'] = Auth::id();
-    $complaint = CyberComplaint::create($data);
-
-    return ApiResponse::sendResponse(201, 'Complaint Sent Successfully', new CyberComplaintResource($complaint));
-}
-
 
     /**
      * Display the specified resource.
      */
-   public function show($id)
-{
-    $complaint = CyberComplaint::where('id', $id)
-        ->where('user_id', Auth::id())
-        ->first();
-
-    if (!$complaint) {
-        return ApiResponse::sendResponse(404, 'Complaint not found', []);
+    public function show($id)
+    {
+         $cybercomplaint = CyberComplaint::where('user_id', Auth::id())->firstOrFail($id);
+        return $cybercomplaint;
     }
-
-    return ApiResponse::sendResponse(200, 'Complaint retrieved successfully', new CyberComplaintResource($complaint));
-}
-
-
 
     /**
      * Update the specified resource in storage.
