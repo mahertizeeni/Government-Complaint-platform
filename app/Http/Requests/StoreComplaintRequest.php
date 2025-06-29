@@ -27,7 +27,14 @@ class StoreComplaintRequest extends FormRequest
             'attachments' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048',
             'description'=>'required|string|min:10',
             'map_iframe' => 'nullable|string',
-            'ananemous' =>'boolean'
+            'anonymous' =>'boolean'
         ];
     }
+    protected function prepareForValidation()
+{
+    $this->merge([
+        'anonymous' => filter_var($this->anonymous, FILTER_VALIDATE_BOOLEAN),
+    ]);
+}
+
 }
