@@ -19,7 +19,7 @@ class ComplaintResource extends JsonResource
             'government_entity_id' => $this->government_entity_id,
             'City_id' => $this->city_id,
             'attachments' => $this->attachments,
-            'Description' => $this->description,
+            'description' => $this->description,
             'is_emergency' => $this->is_emergency,
             'status' => $this->status,
             'anonymous'=>$this->anonymous,

@@ -31,4 +31,11 @@ class StoreComplaintRequest extends FormRequest
             //'anonymous' =>'in:0,1'
         ];
     }
+    protected function prepareForValidation()
+{
+    $this->merge([
+        'anonymous' => filter_var($this->anonymous, FILTER_VALIDATE_BOOLEAN),
+    ]);
+}
+
 }

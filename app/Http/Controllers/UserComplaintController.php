@@ -26,12 +26,11 @@ class UserComplaintController extends Controller
      */
 
 
-
-public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analyzer)
+   public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analyzer)
 {
     $validated = $request->validated();
-
-    // معالجة المرفقات
+    $validated['user_id'] = Auth::id();
+    
     if ($request->hasFile('attachments')) {
         $file = $request->file('attachments');
         $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();

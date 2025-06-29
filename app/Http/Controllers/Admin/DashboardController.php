@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ComplaintResource;
 use App\Http\Resources\SuggestionResource;
+use App\Models\CyberComplaint;
 
 class DashboardController extends Controller
 {
@@ -27,7 +28,7 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_complaints'      => Complaint::count(),
-            'urgent_complaints'     => Complaint::where('priority', 'urgent')->count(),
+            // 'urgent_complaints'     => Complaint::where('priority', 'urgent')->count(),
             'resolved_complaints'   => Complaint::where('status', 'resolved')->count(),
             'pending_complaints'    => Complaint::where('status', 'pending')->count(),
             'total_suggestions'     => Suggestion::count(),
@@ -79,12 +80,22 @@ public function complaints(Request $request)
     // جميع المقترحات
     public function suggestions()
     {
-        $suggestions = Suggestion::latest()->paginate(20);
+        $suggestions = Suggestion::all();
 
         return ApiResponse::sendResponse(
             200,
             'Suggestions retrieved successfully.',
             SuggestionResource::collection($suggestions)
+        );
+    }
+    public function cybercomplaint()
+    {
+        $cybercomplaint = CyberComplaint::all();
+
+        return ApiResponse::sendResponse(
+            200,
+            'cybercomplaint retrieved successfully.',
+            SuggestionResource::collection($cybercomplaint)
         );
     }
 }
