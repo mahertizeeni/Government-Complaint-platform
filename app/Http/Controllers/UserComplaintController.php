@@ -17,40 +17,56 @@ class UserComplaintController extends Controller
      */
     public function index()
     {
-        $complaints =Complaint::where('user_id',Auth::id())->get(); 
+        $complaints =Complaint::where('user_id',Auth::id())->get();
     return ApiResponse::sendResponse(200, 'The Complaints For User', ComplaintResource::collection($complaints));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-  
 
 
-    public function store(StoreComplaintRequest $request,AiComplaintAnalyzer $analyzer)
-    {
-        $validated = $request->validated();
-        $validated['user_id']=Auth::id();
-        
-        if($request->hasFile('attachments'))
-        {
-            $file = $request->file('attachments');
-            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('uploads',$fileName,'public');
-            $validated['attachments']=$filePath;
-           
-        }
-        $complaint = Complaint::create($validated);
-        $aiRating=$analyzer->rateEmergencyLevel($complaint->description);
-        if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
+
+public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analyzer)
+{
+    $validated = $request->validated();
+
+    // معالجة المرفقات
+    if ($request->hasFile('attachments')) {
+        $file = $request->file('attachments');
+        $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $filePath = $file->storeAs('uploads', $fileName, 'public');
+        $validated['attachments'] = $filePath;
+    }
+
+    // تعيين user_id حسب كونها شكوى مجهولة أو لا
+    $validated['user_id'] = ($validated['anonymous'] ?? false) ? null : Auth::id();
+
+    /* $validated = $request->validated();
+    $validated['anonymous'] = (int) $validated['anonymous']; // تأكيد أنها رقم 0 أو 1
+    $validated['user_id'] = $validated['anonymous'] === 1 ? null : Auth::id(); */
+
+
+    // إنشاء الشكوى
+    $complaint = Complaint::create($validated);
+
+    // تحليل الطارئة عبر الذكاء الاصطناعي
+    $aiRating = $analyzer->rateEmergencyLevel($complaint->description);
+    if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
         $complaint->is_emergency = $aiRating;
         $complaint->save();
+    }
 
-        return ApiResponse::sendResponse(201,'Complaint Added Successfully',new ComplaintResource($complaint));
+    return ApiResponse::sendResponse(201, 'Complaint Added Successfully', new ComplaintResource($complaint));
+}
 
-        
-    }}
 
+    public function getAnonymousComplaints()
+    {
+        $complaints = Complaint::where('anonymous', true)->get();
+        return ApiResponse::sendResponse(201,'Complaint Added Successfully',new ComplaintResource($complaints)
+);
+    }
 
 
     /**

@@ -12,6 +12,16 @@ use App\Http\Resources\SuggestionResource;
 
 class DashboardController extends Controller
 {
+    public function index()
+{
+    return ApiResponse::sendResponse(200, 'Admin Dashboard entry point.', [
+        'routes' => [
+            'stats' => route('admin.dashboard.stats'),
+            'complaints' => route('admin.dashboard.complaints'),
+            'suggestions' => route('admin.dashboard.suggestions'),
+        ],
+    ]);
+}
     // إحصائيات عامة للوحة التحكم
     public function stats()
     {
@@ -27,34 +37,44 @@ class DashboardController extends Controller
     }
 
     // جميع الشكاوى مع فلترة اختيارية
-    public function complaints(Request $request)
-    {
-        $query = Complaint::with(['entity', 'city', 'handled_by']);
+public function complaints(Request $request)
+{
+    $query = Complaint::with(['governmentEntity', 'city']);
 
-        if ($request->has('city_id')) {
-            $query->where('city_id', $request->city_id);
-        }
-
-        if ($request->has('entity_id')) {
-            $query->where('entity_id', $request->entity_id);
-        }
-
-        if ($request->has('priority')) {
-            $query->where('priority', $request->priority);
-        }
-
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $complaints = $query->latest()->paginate(20);
-
-        return ApiResponse::sendResponse(
-            200,
-            'Complaints retrieved successfully.',
-            ComplaintResource::collection($complaints)
-        );
+    if ($request->filled('city_id')) {
+        $query->where('city_id', $request->city_id);
     }
+
+    if ($request->filled('government_entity_id')) {
+        $query->where('government_entity_id', $request->government_entity_id);
+    }
+
+    if ($request->filled('priority')) {
+        $query->where('priority', $request->priority);
+    }
+
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    if ($request->filled('from_date')) {
+        $query->whereDate('created_at', '>=', $request->from_date);
+    }
+
+    if ($request->filled('to_date')) {
+        $query->whereDate('created_at', '<=', $request->to_date);
+    }
+
+    $perPage = $request->get('per_page', 20);
+    $complaints = $query->latest()->paginate($perPage);
+
+    return ApiResponse::sendResponse(
+        200,
+        'Complaints retrieved successfully.',
+        ComplaintResource::collection($complaints)
+    );
+}
+
 
     // جميع المقترحات
     public function suggestions()
