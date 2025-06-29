@@ -31,12 +31,12 @@ class UserComplaintController extends Controller
     $validated = $request->validated();
     $validated['user_id'] = Auth::id();
     
-    if ($request->hasFile('attachments')) {
-        $file = $request->file('attachments');
-        $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-        $filePath = $file->storeAs('uploads', $fileName, 'public');
-        $validated['attachments'] = $filePath;
-    }
+   if ($request->hasFile('attachments')) {
+    $file = $request->file('attachments');
+    $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+    $filePath = $file->storeAs('uploads', $fileName, 'public');
+    $validated['attachments'] = $filePath; // مثلاً: uploads/image_123.jpg
+}
 
     // تعيين user_id حسب كونها شكوى مجهولة أو لا
     $validated['user_id'] = ($validated['anonymous'] ?? false) ? null : Auth::id();
@@ -71,14 +71,19 @@ class UserComplaintController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
-    {
-        $complaint = Complaint::where('user_id', Auth::id())
-    ->where('id', $id)
-    ->firstOrFail();
+   public function show($id)
+{
+    $complaint = Complaint::where('user_id', Auth::id())
+        ->where('id', $id)
+        ->first();
 
-        return $complaint;
+    if (!$complaint) {
+        return ApiResponse::sendResponse(404, 'Complaint not found', []);
     }
+
+    return ApiResponse::sendResponse(200, 'Complaint retrieved successfully', $complaint);
+}
+
 
     /**
      * Update the specified resource in storage.

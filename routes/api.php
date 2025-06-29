@@ -47,6 +47,8 @@ Route::prefix('employee')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         #### Get Complaints Gor Employee 
         Route::get('complaints',[EmployeeComplaintsController::class,'getComplaints']);
+        #### Get Complaint Gor Employee By id 
+        Route::get('complaint/{id}',[EmployeeComplaintsController::class,'show']);
         #### Get Suggestion Gor Employee 
         Route::get('suggestion',[EmployeeSuggestionController::class,'getSuggestions']);
         #### Get Cybercomplaints Gor Employee 
