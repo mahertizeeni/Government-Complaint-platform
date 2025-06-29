@@ -17,14 +17,13 @@ class UserComplaintController extends Controller
      */
     public function index()
     {
-        $complaints =Complaint::where('user_id',Auth::id())->get(); 
+        $complaints =Complaint::where('user_id',Auth::id())->get();
     return ApiResponse::sendResponse(200, 'The Complaints For User', ComplaintResource::collection($complaints));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-  
 
 
    public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analyzer)
@@ -39,30 +38,34 @@ class UserComplaintController extends Controller
         $validated['attachments'] = $filePath;
     }
 
+    // تعيين user_id حسب كونها شكوى مجهولة أو لا
+    $validated['user_id'] = ($validated['anonymous'] ?? false) ? null : Auth::id();
+
+    /* $validated = $request->validated();
+    $validated['anonymous'] = (int) $validated['anonymous']; // تأكيد أنها رقم 0 أو 1
+    $validated['user_id'] = $validated['anonymous'] === 1 ? null : Auth::id(); */
+
+
     // إنشاء الشكوى
     $complaint = Complaint::create($validated);
 
-    // تحليل الذكاء الاصطناعي
+    // تحليل الطارئة عبر الذكاء الاصطناعي
     $aiRating = $analyzer->rateEmergencyLevel($complaint->description);
-
-    // إذا كان تقييم الذكاء الاصطناعي صحيح (1 أو 2 أو 3)، خزن القيمة
     if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
         $complaint->is_emergency = $aiRating;
-    } else {
-        // غير ذلك، استخدم القيمة الافتراضية 1
-        $complaint->is_emergency = 1;
+        $complaint->save();
     }
 
-    $complaint->save();
-
-    return ApiResponse::sendResponse(
-        201,
-        'Complaint Added Successfully',
-        new ComplaintResource($complaint)
-    );
+    return ApiResponse::sendResponse(201, 'Complaint Added Successfully', new ComplaintResource($complaint));
 }
 
 
+    public function getAnonymousComplaints()
+    {
+        $complaints = Complaint::where('anonymous', true)->get();
+        return ApiResponse::sendResponse(201,'Complaint Added Successfully',new ComplaintResource($complaints)
+);
+    }
 
 
     /**
