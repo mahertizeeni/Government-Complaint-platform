@@ -68,7 +68,7 @@ class SuggestionController extends Controller
     public function destroy(Suggestion $suggestion)
     {
         $suggestion->delete();
-        return ApiResponse::sendResponse(204, 'Suggestion deleted successfully', []);
+        return ApiResponse::sendResponse(200, 'Suggestion deleted successfully', []);
     }
 
     // مقترحات حسب الجهة الحكومية

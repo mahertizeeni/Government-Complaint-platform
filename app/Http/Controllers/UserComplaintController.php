@@ -17,14 +17,13 @@ class UserComplaintController extends Controller
      */
     public function index()
     {
-        $complaints =Complaint::where('user_id',Auth::id())->get(); 
+        $complaints =Complaint::where('user_id',Auth::id())->get();
     return ApiResponse::sendResponse(200, 'The Complaints For User', ComplaintResource::collection($complaints));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-  
 
 
     public function store(StoreComplaintRequest $request,AiComplaintAnalyzer $analyzer)
@@ -51,6 +50,12 @@ class UserComplaintController extends Controller
         
     }}
 
+    public function getAnonymousComplaints()
+    {
+        $complaints = Complaint::where('anonymous', true)->get();
+        return ApiResponse::sendResponse(201,'Complaint Added Successfully',new ComplaintResource($complaints)
+);
+    }
 
 
     /**
