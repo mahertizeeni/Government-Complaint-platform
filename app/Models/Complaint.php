@@ -13,13 +13,16 @@ class Complaint extends Model
     protected $table = 'complaints';
 
     protected $guarded = ['id'];
-     protected $fillable = [
-        'title',
-        'description',
-        'city_id',
-        'government_entity_id',
-        'user_id', // إذا كنت تريد ربط الشكوى بالمستخدم
-    ];
+    protected $fillable = [
+    'description',
+    'city_id',
+    'government_entity_id',
+    'user_id',
+    'attachments',
+    'anonymous',
+    'map_iframe', 
+];
+
 
      public function user()
     {
