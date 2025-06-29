@@ -17,45 +17,52 @@ class UserComplaintController extends Controller
      */
     public function index()
     {
-        $complaints =Complaint::where('user_id',Auth::id())->get();
+        $complaints =Complaint::where('user_id',Auth::id())->get(); 
     return ApiResponse::sendResponse(200, 'The Complaints For User', ComplaintResource::collection($complaints));
     }
 
     /**
      * Store a newly created resource in storage.
      */
+  
 
 
-    public function store(StoreComplaintRequest $request,AiComplaintAnalyzer $analyzer)
+   public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analyzer)
     {
         $validated = $request->validated();
-        $validated['user_id']=Auth::id();
+    $validated['user_id'] = Auth::id();
         
-        if($request->hasFile('attachments'))
-        {
+   if ($request->hasFile('attachments')) {
             $file = $request->file('attachments');
             $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('uploads',$fileName,'public');
-            $validated['attachments']=$filePath;
-           
+    $filePath = $file->storeAs('uploads', $fileName, 'public');
+    $validated['attachments'] = $filePath; 
         }
+
+    // إنشاء الشكوى
         $complaint = Complaint::create($validated);
-        $aiRating=$analyzer->rateEmergencyLevel($complaint->description);
+
+    // تحليل الذكاء الاصطناعي
+    $aiRating = $analyzer->rateEmergencyLevel($complaint->description);
+
+    // إذا كان تقييم الذكاء الاصطناعي صحيح (1 أو 2 أو 3)، خزن القيمة
         if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
         $complaint->is_emergency = $aiRating;
+    } else {
+        // غير ذلك، استخدم القيمة الافتراضية 1
+        $complaint->is_emergency = 1;
+    }
+
         $complaint->save();
 
-        return ApiResponse::sendResponse(201,'Complaint Added Successfully',new ComplaintResource($complaint));
+    return ApiResponse::sendResponse(
+        201,
+        'Complaint Added Successfully',
+        new ComplaintResource($complaint)
+    );
+}
 
-        
-    }}
 
-    public function getAnonymousComplaints()
-    {
-        $complaints = Complaint::where('anonymous', true)->get();
-        return ApiResponse::sendResponse(201,'Complaint Added Successfully',new ComplaintResource($complaints)
-);
-    }
 
 
     /**
