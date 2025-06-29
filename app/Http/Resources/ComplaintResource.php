@@ -20,9 +20,6 @@ class ComplaintResource extends JsonResource
             'government_entity_id' => $this->government_entity_id,
             'city_id' => $this->city_id,
             'attachments' => $this->attachments,
-            'attachments_url' => $this->attachments 
-                ? asset('storage/' . $this->attachments) 
-                : null,
             'description' => $this->description,
             'is_emergency' => $this->is_emergency,
             'status' => $this->status,

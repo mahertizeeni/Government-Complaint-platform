@@ -30,8 +30,6 @@ class EmployeeCyberComplaintsController extends Controller
     $employee = Auth::user();
 
     $cybercomplaint = CyberComplaint::where('id', $id)
-        ->where('government_entity_id', $employee->government_entity_id)
-        ->where('city_id', $employee->city_id)
         ->first();
 
     if (!$cybercomplaint) {
@@ -39,5 +37,20 @@ class EmployeeCyberComplaintsController extends Controller
     }
 
     return ApiResponse::sendResponse(200, 'cybercomplaint retrieved successfully', new CyberComplaintResource($cybercomplaint));
+}
+public function updateStatus(Request $request , $id)
+{
+ $request->validate(([
+  'status'=>'required|in:pending,accepted,rejected',
+ ]));
+$CyberComplaint=CyberComplaint::find($id);
+
+if(!$CyberComplaint)
+{
+ return ApiResponse::sendResponse(404,'Not Found',[]);
+}
+$CyberComplaint->status=$request->status ;
+$CyberComplaint->save();
+return ApiResponse::sendResponse(200,'Status Updated Successfully');
 }
 }

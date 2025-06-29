@@ -27,60 +27,43 @@ class UserComplaintController extends Controller
   
 
 
-   public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analyzer)
-{
-    $validated = $request->validated();
-    $validated['user_id'] = Auth::id();
-    
-   if ($request->hasFile('attachments')) {
-    $file = $request->file('attachments');
-    $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-    $filePath = $file->storeAs('uploads', $fileName, 'public');
-    $validated['attachments'] = $filePath; // مثلاً: uploads/image_123.jpg
-}
-
-    // إنشاء الشكوى
-    $complaint = Complaint::create($validated);
-
-    // تحليل الذكاء الاصطناعي
-    $aiRating = $analyzer->rateEmergencyLevel($complaint->description);
-
-    // إذا كان تقييم الذكاء الاصطناعي صحيح (1 أو 2 أو 3)، خزن القيمة
-    if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
+    public function store(StoreComplaintRequest $request,AiComplaintAnalyzer $analyzer)
+    {
+        $validated = $request->validated();
+        $validated['user_id']=Auth::id();
+        
+        if($request->hasFile('attachments'))
+        {
+            $file = $request->file('attachments');
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $filePath = $file->storeAs('uploads',$fileName,'public');
+            $validated['attachments']=$filePath;
+           
+        }
+        $complaint = Complaint::create($validated);
+        $aiRating=$analyzer->rateEmergencyLevel($complaint->description);
+        if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
         $complaint->is_emergency = $aiRating;
-    } else {
-        // غير ذلك، استخدم القيمة الافتراضية 1
-        $complaint->is_emergency = 1;
-    }
+        $complaint->save();
 
-    $complaint->save();
+        return ApiResponse::sendResponse(201,'Complaint Added Successfully',new ComplaintResource($complaint));
 
-    return ApiResponse::sendResponse(
-        201,
-        'Complaint Added Successfully',
-        new ComplaintResource($complaint)
-    );
-}
-
+        
+    }}
 
 
 
     /**
      * Display the specified resource.
      */
-   public function show($id)
-{
-    $complaint = Complaint::where('user_id', Auth::id())
-        ->where('id', $id)
-        ->first();
+    public function show($id)
+    {
+        $complaint = Complaint::where('user_id', Auth::id())
+    ->where('id', $id)
+    ->firstOrFail();
 
-    if (!$complaint) {
-        return ApiResponse::sendResponse(404, 'Complaint not found', []);
+        return $complaint;
     }
-
-    return ApiResponse::sendResponse(200, 'Complaint retrieved successfully', $complaint);
-}
-
 
     /**
      * Update the specified resource in storage.
