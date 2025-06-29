@@ -19,6 +19,9 @@ class CyberComplaintResource extends JsonResource
             'User_id' => $this->user_id,
             'type' => $this->type,
             'evidence_file' => $this->evidence_file,
+             'evidence_file_url' => $this->evidence_file 
+                ? asset('storage/' . $this->evidence_file) 
+                : null,
             'Description' => $this->description,
             'related_link' => $this->related_link,
             'status' => $this->status,
