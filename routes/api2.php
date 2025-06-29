@@ -41,6 +41,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', IsAdmin::class])->group(func
     // لوحات التحكم
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/dashboard/suggestions', [DashboardController::class, 'suggestions']);
+    Route::get('/dashboard/cybercomplaint', [DashboardController::class, 'cybercomplaint']);
     Route::get('/dashboard/complaints', [DashboardController::class, 'complaints']);
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 
