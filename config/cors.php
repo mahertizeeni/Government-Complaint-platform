@@ -17,11 +17,15 @@ return [
 
 
 
+
     'paths' => ['api/*'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'https://gov-complaints-platform.onrender.com')],
+    'allowed_origins' => [
+        'http://localhost:3000', // React المحلي
+        'https://gov-complaints-platform.onrender.com', // دومين الاستضافة
+    ],
 
     'allowed_origins_patterns' => [],
 
@@ -33,6 +37,8 @@ return [
 
     'supports_credentials' => true,
 
-
-
 ];
+
+
+
+
