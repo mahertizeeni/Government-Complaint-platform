@@ -30,17 +30,27 @@ class Employee extends Authenticatable
     ];
 
 
-    public function complaints()
+   public function complaints()
     {
-        return $this->hasMany(Complaint::class, 'intity', 'intity');
+        return $this->hasMany(Complaint::class, 'government_entity_id', 'government_entity_id')
+                ->whereColumn('city_id', 'city_id');
     }
+
+    public function suggestion()
+{
+     return $this->hasMany(Suggestion::class, 'government_entity_id', 'government_entity_id')
+                ->whereColumn('city_id', 'city_id');
+}
+
+
     
     public function governmentEntity()
     {
         return $this->belongsTo(GovernmentEntity::class);
     }
-    public function City()
+    public function city()
     {
         return $this->belongsTo(City::class);
     }
+    
 }

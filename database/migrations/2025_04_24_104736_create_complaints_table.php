@@ -18,18 +18,20 @@ return new class extends Migration
             $table->foreignId('city_id')->constrained()->onDelete('cascade');
             $table->string('attachments')->nullable();
             $table->text('description');
-            $table->boolean('is_emergency')->default(false);
-            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
-            $table->text('map_iframe')->nullable();
-
-            // category_id FK to categories.category_id (non-standard PK)
-            $table->unsignedBigInteger('category_id');
-            $table->foreign('category_id')->references('category_id')->on('categories')->onDelete('cascade');
-
-            $table->enum('status',['pending','accepted','rejected'])->default('pending');
+            $table->enum('is_emergency', ['1', '2', '3'])->default('1');
+            $table->boolean('anonymous')->default(false);
+            $table->string('status')->default('pending');
             $table->text('map_iframe')->nullable();
             $table->timestamps();
+
         });
     }
+public function down(): void
+{Schema::table('complaints', function (Blueprint $table) {
+    $table->dropForeign(['city_id']);
+});
+Schema::dropIfExists('complaints');
 
+
+}
 };

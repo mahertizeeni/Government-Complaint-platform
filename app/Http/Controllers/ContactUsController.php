@@ -9,14 +9,11 @@ use Illuminate\Http\Request;
 
 class ContactUsController extends Controller
 {
-    /**
-     * Handle the incoming request.
-     */
     public function __invoke(ContactUsRequest $request)
     {
        $data=$request->validated();
-       $recorde=ContactUs::create($data);
-       if($recorde)
+       $record=ContactUs::create($data);
+       if($record)
        {return ApiResponse::sendResponse(201,'sent successfully',null);}
     }
 }

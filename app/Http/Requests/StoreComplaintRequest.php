@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreComplaintRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'government_entity_id'=>'required|exists:government_entities,id',
+            'city_id'=>'required|exists:cities,id',
+            'attachments' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048',
+            'description'=>'required|string|min:10',
+            'map_iframe' => 'nullable|string',
+            'anonymous' =>'boolean',
+            //'anonymous' =>'in:0,1'
+        ];
+    }
+    protected function prepareForValidation()
+{
+    $this->merge([
+        'anonymous' => filter_var($this->anonymous, FILTER_VALIDATE_BOOLEAN),
+    ]);
+}
+
+}

@@ -10,17 +10,38 @@ class Complaint extends Model
 {
     use HasFactory;
 
-    // تحديد الجدول إذا كان مختلفًا عن الاسم الافتراضي
     protected $table = 'complaints';
 
-    // تحديد الحقول القابلة للتعبئة
     protected $guarded = ['id'];
-    public function governmentEntity()
+     protected $fillable = [
+        'anonymous',
+        'description',
+        'city_id',
+        'government_entity_id',
+        'user_id',
+        'attachments',
+        'description',
+        'is_emergency',
+        'status',
+        'map_iframe'
+    ];
+
+     public function user()
     {
-        return $this->belongsTo(GovernmentEntity::class);
+        return $this->belongsTo(User::class);
     }
-    public function City()
+    public function city()
     {
-        return $this->belongsTo(City::class);
+    return $this->belongsTo(City::class);
     }
+
+public function governmentEntity()
+    {
+    return $this->belongsTo(GovernmentEntity::class);
+    }
+    public function handled_by()
+{
+    return $this->belongsTo(Employee::class, 'handled_by_id'); // أو Admin::class
+}
+
 }

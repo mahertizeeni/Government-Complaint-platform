@@ -1,44 +1,76 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
+// use App\Http\Controllers\Api\AuthController;
+use App\Models\ContactUs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ContactUsController;
+use App\Http\Controllers\SmartChatController;
+use App\Http\Controllers\ComplaintChatController;
+use App\Http\Controllers\UserComplaintController;
+use App\Http\Controllers\CyberComplaintController;
+use App\Http\Controllers\employee\auth\AuthController;
+use App\Http\Controllers\EmployeeComplaintsController;
+use App\Http\Controllers\EmployeeSuggestionController;
+use App\Http\Controllers\EmployeeCyberComplaintsController;
+use Laravel\Sanctum\Sanctum;
 
 /* Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 }); */
-Route::get('/user', function (Request $request) {
-    return 'hello from api ';
+
+
+use Illuminate\Support\Facades\Mail;
+
+Route::get('/test-email', function () {
+    Mail::raw('This is a test email.', function ($message) {
+        $message->to('maher.photography14@gmail.com')
+                ->subject('Test Email');
+    });
+
+    return 'Email sent!';
 });
-/* Route::controller(AuthController::class)->group(function()
-{
-    Route::post('register','register');
-}); */
-//Route::post('/register', [AuthController::class, 'register']);
-use App\Http\Controllers\ContactUsController;
-// use App\Http\Controllers\employee\auth\AuthController;
-use App\Http\Controllers\EmployeeComplaintsController;
-// use Illuminate\Http\Request;
-// use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SmartChatController;
-use App\Models\ContactUs;
+Route::post('/chatai', [ComplaintChatController::class, 'handleChat']);
 
-// ChatBot Endpoint
-Route::post('/chat', [SmartChatController::class, 'chat']);
 
-//ContactUs Endpoint
+########## ChatBot Endpoint
+Route::middleware('web')->post('/chat', [SmartChatController::class, 'chat']);
+Route::get('/chatr', [SmartChatController::class, 'resetChat']);
+
+######### ContactUs Endpoint
 Route::post('/contactus',[ContactUsController::class, '__invoke']);
-Route::controller(AuthController::class)->group(function(){
-    
-});
-// Employee account
+######### Complaint Recource Endpoint
+Route::apiResource('User-Complaints',UserComplaintController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum');
+######### CyberComplaint Endpoint
+// Route::post('/cybercomplaint',[CyberComplaintController::class,'store']);
+Route::apiResource('User-CyberComplaint',CyberComplaintController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum');
+
+######## Employee account
 Route::prefix('employee')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
     Route::middleware('auth:sanctum')->group(function () {
-        
+        #### middelware for making sure of logging in
         Route::post('logout', [AuthController::class, 'logout']);
+        #### Get Complaints Gor Employee 
         Route::get('complaints',[EmployeeComplaintsController::class,'getComplaints']);
+        #### Get Complaint Gor Employee By id 
+        Route::get('complaint/{id}',[EmployeeComplaintsController::class,'show']);
+        #### Update Complaint Status
+        Route::put('complaints/{id}/status',[EmployeeComplaintsController::class,'updateStatus']);
+
+        #### Get Suggestion Gor Employee 
+        Route::get('suggestion',[EmployeeSuggestionController::class,'getSuggestions']);
+        #### Get suggestion Gor Employee By id 
+        Route::get('suggestion/{id}',[EmployeeSuggestionController::class,'show']);
+
+        #### Get Cybercomplaints Gor Employee 
+        Route::get('cybercomplaints',[EmployeeCyberComplaintsController::class,'getComplaints']);
+         #### Get cyberComplaint Gor Employee By id 
+        Route::get('cybercomplaint/{id}',[EmployeeCyberComplaintsController::class,'show']);
+    
+        #### Update CyberComplaint Status
+        Route::put('cybercomplaints/{id}',[EmployeeCyberComplaintsController::class,'updateStatus']);
     });
 });
 
@@ -47,4 +79,8 @@ Route::prefix('employee')->group(function () {
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
+
+    
+
 });
+
