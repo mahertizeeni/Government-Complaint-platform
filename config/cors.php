@@ -18,13 +18,16 @@ return [
 
 
 
-    'paths' => ['api/*'],
+ 
+
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost:3000', // React المحلي
-        'https://gov-complaints-platform.onrender.com', // دومين الاستضافة
+        'http://localhost:3000',
+        'https://gov-complaints-platform.onrender.com',
+        'https://cors-test.codehappy.dev',
     ],
 
     'allowed_origins_patterns' => [],
@@ -38,6 +41,7 @@ return [
     'supports_credentials' => true,
 
 ];
+
 
 
 
