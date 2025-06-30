@@ -13,10 +13,13 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost:3000',
-        'https://gov-complaints-platform.onrender.com',
-        'https://cors-test.codehappy.dev',
-    ],
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+    'https://gov-complaints-platform.onrender.com',
+    'https://cors-test.codehappy.dev',
+],
+
 
     'allowed_origins_patterns' => [],
 
