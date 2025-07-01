@@ -33,6 +33,7 @@ return [
     'https://localhost:8080',
     'https://localhost:5173',
     'https://localhost:4200',
+    'http://127.0.0.1:5500',
     'https://localhost:5000',
     'https://localhost:8000',
 

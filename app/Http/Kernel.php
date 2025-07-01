@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\Kernel as HttpKernel;
 class Kernel extends HttpKernel
 {
     protected $middleware = [
-        \App\Http\Middleware\CustomCors::class,
+        // \App\Http\Middleware\CustomCors::class,
         \Illuminate\Http\Middleware\HandleCors::class, // ✅ الصحيح في Laravel 12
         \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
