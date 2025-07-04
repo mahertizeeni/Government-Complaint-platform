@@ -22,7 +22,7 @@ use Laravel\Sanctum\Sanctum;
 
 use Illuminate\Support\Facades\Mail;
 
-Route::post('/chatai', [ComplaintChatController::class, 'handleChat']);
+Route::post('/chatai', [ComplaintChatController::class, 'handleChat'])->middleware('auth:sanctum');
 
 
 ########## ChatBot Endpoint
