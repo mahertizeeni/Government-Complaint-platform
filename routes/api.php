@@ -22,14 +22,6 @@ use Laravel\Sanctum\Sanctum;
 
 use Illuminate\Support\Facades\Mail;
 
-Route::get('/test-email', function () {
-    Mail::raw('This is a test email.', function ($message) {
-        $message->to('maher.photography14@gmail.com')
-                ->subject('Test Email');
-    });
-
-    return 'Email sent!';
-});
 Route::post('/chatai', [ComplaintChatController::class, 'handleChat']);
 
 

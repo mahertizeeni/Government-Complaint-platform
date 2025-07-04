@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('suggestions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('government_entity_id');
-            $table->unsignedBigInteger('city_id');
+            // $table->unsignedBigInteger('user_id');
+            // $table->unsignedBigInteger('government_entity_id');
+            // $table->unsignedBigInteger('city_id');
             $table->string('title');
             $table->text('description')->nullable();
             $table->timestamps();
