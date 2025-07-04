@@ -43,74 +43,69 @@ class GroqService
         return $response->json()['choices'][0]['message']['content'] ?? 'عذرًا، حدث خطأ في المعالجة';
     }
 
-    protected function preparePrompt(array $history): array
-    {
-        $systemMessage = [
-            'role' => 'system',
-            'content' => <<<EOT
-أنت مساعد ذكي يتحدث **فقط اللغة العربية الفصحى**.  
-مهمتك هي مساعدة المواطنين في تقديم الشكاوى.  
-يجب أن ترد دائمًا بالعربية فقط، ولا تستخدم أي كلمات بلغات أخرى.
-
-جمع المعلومات التالية فقط:
-1. تفاصيل الحادثة
-2. الجهة الحكومية
+  protected function preparePrompt(array $history): array
+{
+    $systemMessage = [
+        'role' => 'system',
+        'content' => <<<EOT
+أنت مساعد ذكي يتحدث فقط باللغة العربية الفصحى.  
+مهمتك هي مساعدة المواطن في تقديم شكوى عبر جمع المعلومات التالية:
+1. تفاصيل الحادثة  
+2. الجهة الحكومية  
 3. المدينة
 
-❌ لا تطلب رقم هاتف أو بريد إلكتروني.  
-✅ لا تكرر الأسئلة التي أجاب عنها المستخدم.  
-✅ تابع من حيث توقفت فقط.
+❌ لا تطلب بريدًا إلكترونيًا أو رقم هاتف  
+✅ لا تكرر الأسئلة التي تمّت الإجابة عليها  
+✅ تابع من حيث توقفت فقط
 EOT
-        ];
+    ];
 
-        $messages = [$systemMessage];
+    $messages = [$systemMessage];
 
-        $collected = [
-            'نوع الشكوى' => false,
-            'تفاصيل الحادثة' => false,
-            'الجهة الحكومية' => false,
-            'المدينة' => false,
-        ];
+    $collected = [
+        'تفاصيل الحادثة' => false,
+        'الجهة الحكومية' => false,
+        'المدينة' => false,
+    ];
 
-        foreach ($history as $msg) {
-            $role = $msg['is_bot'] ? 'assistant' : 'user';
-            $content = $msg['content'];
+    foreach ($history as $msg) {
+        $role = $msg['is_bot'] ? 'assistant' : 'user';
+        $content = $msg['content'];
 
-            if (mb_strlen($content) > 40) {
-                $collected['تفاصيل الحادثة'] = true;
-            }
-
-            if (preg_match('/(وزارة|بلدية|التربية|الكهرباء|الصحة)/ui', $content)) {
-                $collected['الجهة الحكومية'] = true;
-            }
-
-            if (preg_match('/(دمشق|حلب|حمص|اللاذقية|طرطوس|مدينة|الرياض|جدة|مكة)/ui', $content)) {
-                $collected['المدينة'] = true;
-            }
-
-            $messages[] = [
-                'role' => $role,
-                'content' => $content
-            ];
+        if (mb_strlen($content) > 40) {
+            $collected['تفاصيل الحادثة'] = true;
         }
 
-        $summary = "ملخص المعلومات التي تم جمعها:\n";
-        foreach ($collected as $key => $value) {
-            $summary .= "- $key: " . ($value ? '✓ موجود' : '✘ لم يُذكر بعد') . "\n";
+        if (preg_match('/(وزارة|بلدية|التربية|الكهرباء|الصحة)/ui', $content)) {
+            $collected['الجهة الحكومية'] = true;
         }
 
-        $messages[] = [
-            'role' => 'system',
-            'content' => <<<EOT
-الرجاء متابعة المحادثة بناءً على التالي:
+        if (preg_match('/(دمشق|حلب|حمص|اللاذقية|طرطوس|الرياض|جدة|مكة)/ui', $content)) {
+            $collected['المدينة'] = true;
+        }
+
+        $messages[] = compact('role', 'content');
+    }
+
+    // أضف رسالة system ذكية في النهاية لتوجيه البوت
+    $summary = "ملخص المعلومات التي تم جمعها:\n";
+    foreach ($collected as $key => $value) {
+        $summary .= "- $key: " . ($value ? '✓ موجود' : '✘ لم يُذكر بعد') . "\n";
+    }
+
+    $messages[] = [
+        'role' => 'system',
+        'content' => <<<EOT
+تابع المحادثة بناءً على التالي:
 
 $summary
 
-إذا كان هناك بند لم يُذكر بعد، اسأل عنه فقط.
-لا تعيد الأسئلة التي تمت الإجابة عليها.
+اسأل فقط عن المعلومات غير الموجودة.
+لا تكرر ما تم سؤاله مسبقًا.
 EOT
-        ];
+    ];
 
-        return $messages;
-    }
+    return $messages;
+}
+
 }
