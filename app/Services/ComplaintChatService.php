@@ -1,8 +1,12 @@
 <?php
+
 namespace App\Services;
 
-use Illuminate\Support\Facades\Redis;
+use App\Models\City;
+use App\Models\GovernmentEntity;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redis;
 
 class ComplaintChatService
 {
@@ -36,4 +40,60 @@ class ComplaintChatService
             Log::error("Redis clearConversation error: " . $e->getMessage());
         }
     }
+
+    /**
+     * استخراج بيانات الشكوى من المحادثة
+     */
+  public function extractComplaintData(array $conversation): array
+{
+    $data = [
+        'user_id' => Auth::id(),
+        'city_id' => null,
+        'government_entity_id' => null,
+        'description' => '',
+    ];
+
+    $cities = City::all();
+    $entities = GovernmentEntity::all();
+
+    foreach ($conversation as $msg) {
+        if (!$msg['is_bot']) {
+            $text = $msg['content'];
+            $data['description'] .= $text . ' ';
+
+            // نفصل الكلام إلى كلمات فردية
+            $words = explode(' ', $text);
+
+            // مطابقة المدينة
+            if (!$data['city_id']) {
+                foreach ($words as $word) {
+                    foreach ($cities as $city) {
+                        similar_text(trim($city->name), trim($word), $percent);
+                        if ($percent >= 70) {
+                            $data['city_id'] = $city->id;
+                            break 2; // نطلع من اللوبين
+                        }
+                    }
+                }
+            }
+
+            // مطابقة الجهة الحكومية
+            if (!$data['government_entity_id']) {
+                foreach ($words as $word) {
+                    foreach ($entities as $entity) {
+                        similar_text(trim($entity->name), trim($word), $percent);
+                        if ($percent >= 70) {
+                            $data['government_entity_id'] = $entity->id;
+                            break 2;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return $data;
+}
+
+
 }

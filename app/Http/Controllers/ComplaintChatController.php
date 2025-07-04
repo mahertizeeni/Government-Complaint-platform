@@ -101,13 +101,14 @@
 //         ]);
 //     }
 // }
+
 namespace App\Http\Controllers;
 
 use App\Services\ComplaintChatService;
-use Illuminate\Support\Facades\Log;
-
 use App\Services\GroqService;
+use App\Models\Complaint;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ComplaintChatController extends Controller
 {
@@ -120,81 +121,94 @@ class ComplaintChatController extends Controller
         $this->groqService = $groqService;
     }
 
-   public function handleChat(Request $request)
-{
-    $request->validate([
-        'message' => 'required|string',
-        'session_token' => 'required|string'
-    ]);
+    public function handleChat(Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string',
+            'session_token' => 'required|string',
+        ]);
 
-    $sessionToken = $request->session_token;
-    $userMessage = $request->message;
+        $sessionToken = $request->session_token;
+        $userMessage = $request->message;
 
-    try {
-        // جلب المحادثة القديمة
-        $conversation = $this->chatService->getConversation($sessionToken);
-    } catch (\Exception $e) {
-        Log::error("Error getting conversation: " . $e->getMessage());
-        return response()->json(['error' => 'خطأ في جلب المحادثة'], 500);
-    }
-
-    try {
-        if ($this->conversationIsComplete($conversation)) {
-            $this->chatService->clearConversation($sessionToken);
-            $conversation = [];
+        try {
+            // جلب المحادثة القديمة من Redis
+            $conversation = $this->chatService->getConversation($sessionToken);
+        } catch (\Exception $e) {
+            Log::error("Error getting conversation: " . $e->getMessage());
+            return response()->json(['error' => 'خطأ في جلب المحادثة'], 500);
         }
-    } catch (\Exception $e) {
-        Log::error("Error checking conversation completion: " . $e->getMessage());
+
+        try {
+            // إذا المحادثة مكتملة، خزّن الشكوى واحذف المحادثة المؤقتة
+            if ($this->conversationIsComplete($conversation)) {
+                // استخراج البيانات من المحادثة
+                $data = $this->chatService->extractComplaintData($conversation);
+
+                // تخزين الشكوى في قاعدة البيانات
+                Complaint::create($data);
+
+                // حذف المحادثة من Redis
+                $this->chatService->clearConversation($sessionToken);
+
+                // إعادة تعيين المحادثة لمحادثة جديدة
+                $conversation = [];
+            }
+        } catch (\Exception $e) {
+            Log::error("Error processing completed conversation: " . $e->getMessage());
+        }
+
+        try {
+            // إضافة رسالة المستخدم للمحادثة
+            $conversation[] = [
+                'content' => $userMessage,
+                'is_bot' => false,
+                'timestamp' => now()->toIso8601String(),
+            ];
+        } catch (\Exception $e) {
+            Log::error("Error adding user message: " . $e->getMessage());
+        }
+
+        try {
+            // توليد رد البوت من خدمة Groq
+            $botResponse = $this->groqService->generateResponse($conversation);
+        } catch (\Exception $e) {
+            Log::error("Error generating bot response: " . $e->getMessage());
+            return response()->json(['error' => 'فشل في توليد الرد من الخدمة الخارجية'], 500);
+        }
+
+        try {
+            // إضافة رد البوت للمحادثة
+            $conversation[] = [
+                'content' => $botResponse,
+                'is_bot' => true,
+                'timestamp' => now()->toIso8601String(),
+            ];
+
+            // حفظ المحادثة في Redis
+            $this->chatService->saveConversation($sessionToken, $conversation);
+        } catch (\Exception $e) {
+            Log::error("Error saving conversation: " . $e->getMessage());
+        }
+
+        return response()->json([
+            'response' => $botResponse,
+        ]);
     }
 
-    try {
-        // إضافة رسالة المستخدم
-        $conversation[] = [
-            'content' => $userMessage,
-            'is_bot' => false,
-            'timestamp' => now()
-        ];
-    } catch (\Exception $e) {
-        Log::error("Error adding user message: " . $e->getMessage());
-    }
-
-    try {
-        // توليد رد Groq
-        $botResponse = $this->groqService->generateResponse($conversation);
-    } catch (\Exception $e) {
-        Log::error("Error generating bot response: " . $e->getMessage());
-        return response()->json(['error' => 'فشل في توليد الرد من الخدمة الخارجية'], 500);
-    }
-
-    try {
-        // إضافة رد البوت
-        $conversation[] = [
-            'content' => $botResponse,
-            'is_bot' => true,
-            'timestamp' => now()
-        ];
-
-        // حفظ المحادثة
-        $this->chatService->saveConversation($sessionToken, $conversation);
-    } catch (\Exception $e) {
-        Log::error("Error saving conversation: " . $e->getMessage());
-    }
-
-    return response()->json([
-        'response' => $botResponse
-    ]);
-}
-
-
-    // ✅ التحقق من اكتمال الشكوى
+    /**
+     * التحقق من اكتمال المحادثة
+     * @param array $conversation
+     * @return bool
+     */
     protected function conversationIsComplete(array $conversation): bool
     {
-        // فرضية: إذا أكثر من 6 رسائل = شكوى مكتملة
+        // قاعدة: إذا عدد الرسائل 6 أو أكثر اعتبرها مكتملة
         if (count($conversation) >= 6) {
             return true;
         }
 
-        // أو: التحقق من آخر رسالة فيها "تم استلام شكواك"
+        // أو التحقق من وجود رسالة بوت تحتوي جملة تأكيدية
         $lastBotMessage = collect($conversation)
             ->reverse()
             ->firstWhere('is_bot', true);

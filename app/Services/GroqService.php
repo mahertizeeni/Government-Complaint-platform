@@ -15,92 +15,93 @@ class GroqService
         $this->apiKey = env('GROQ_API_KEY');
     }
 
-public function generateResponse(array $conversationHistory): string
-{
-    $messages = $this->preparePrompt($conversationHistory);
+    public function generateResponse(array $conversationHistory): string
+    {
+        $messages = $this->preparePrompt($conversationHistory);
 
-    // سجل الرسائل المُرسلة إلى النموذج (للمراجعة)
-    Log::info('Prepared messages for Groq:', $messages);
+        // سجل الرسائل المُرسلة إلى النموذج (للمراجعة)
+        Log::info('Prepared messages for Groq:', $messages);
 
-    $response = Http::withHeaders([
-        'Authorization' => 'Bearer ' . $this->apiKey,
-        'Content-Type' => 'application/json',
-        'HTTP-Referer' => 'http://localhost'
-    ])->post($this->endpoint, [
-        'model' => 'llama-3.3-70b-versatile',
-        'messages' => $messages,
-        'temperature' => 0.7,
-    ]);
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'HTTP-Referer' => 'http://localhost'
+        ])->post($this->endpoint, [
+            'model' => 'llama-3.3-70b-versatile',
+            'messages' => $messages,
+            'temperature' => 0.3,  // خفض درجة العشوائية لتقليل الأخطاء اللغوية
+        ]);
 
-    Log::info('Groq API response: ' . $response->body());
+        Log::info('Groq API response: ' . $response->body());
 
-    if ($response->failed()) {
-        Log::error('Groq API call failed: ' . $response->body());
-        return 'فشل في الاتصال بالخدمة الخارجية';
+        if ($response->failed()) {
+            Log::error('Groq API call failed: ' . $response->body());
+            return 'فشل في الاتصال بالخدمة الخارجية';
+        }
+
+        return $response->json()['choices'][0]['message']['content'] ?? 'عذرًا، حدث خطأ في المعالجة';
     }
 
-    return $response->json()['choices'][0]['message']['content'] ?? 'عذرًا، حدث خطأ في المعالجة';
-}
-
     protected function preparePrompt(array $history): array
-{
-    $systemMessage = [
-        'role' => 'system',
-        'content' => <<<EOT
-أنت مساعد ذكي لمساعدة المواطنين في تقديم الشكاوى. 
-مهمتك هي جمع المعلومات التالية فقط:
+    {
+        $systemMessage = [
+            'role' => 'system',
+            'content' => <<<EOT
+أنت مساعد ذكي يتحدث **فقط اللغة العربية الفصحى**.  
+مهمتك هي مساعدة المواطنين في تقديم الشكاوى.  
+يجب أن ترد دائمًا بالعربية فقط، ولا تستخدم أي كلمات بلغات أخرى.
+
+جمع المعلومات التالية فقط:
 1. تفاصيل الحادثة
 2. الجهة الحكومية
 3. المدينة
 
-❌ لا تطلب رقم هاتف أو بريد إلكتروني.
-✅ لا تكرر الأسئلة التي أجاب عنها المستخدم.
+❌ لا تطلب رقم هاتف أو بريد إلكتروني.  
+✅ لا تكرر الأسئلة التي أجاب عنها المستخدم.  
 ✅ تابع من حيث توقفت فقط.
 EOT
-    ];
+        ];
 
-    $messages = [$systemMessage];
+        $messages = [$systemMessage];
 
-    $collected = [
-        'نوع الشكوى' => false,
-        'تفاصيل الحادثة' => false,
-        'الجهة الحكومية' => false,
-        'المدينة' => false,
-    ];
+        $collected = [
+            'نوع الشكوى' => false,
+            'تفاصيل الحادثة' => false,
+            'الجهة الحكومية' => false,
+            'المدينة' => false,
+        ];
 
-    foreach ($history as $msg) {
-        $role = $msg['is_bot'] ? 'assistant' : 'user';
-        $content = $msg['content'];
+        foreach ($history as $msg) {
+            $role = $msg['is_bot'] ? 'assistant' : 'user';
+            $content = $msg['content'];
 
+            if (mb_strlen($content) > 40) {
+                $collected['تفاصيل الحادثة'] = true;
+            }
 
+            if (preg_match('/(وزارة|بلدية|التربية|الكهرباء|الصحة)/ui', $content)) {
+                $collected['الجهة الحكومية'] = true;
+            }
 
-        if (mb_strlen($content) > 40) {
-            $collected['تفاصيل الحادثة'] = true;
+            if (preg_match('/(دمشق|حلب|حمص|اللاذقية|طرطوس|مدينة|الرياض|جدة|مكة)/ui', $content)) {
+                $collected['المدينة'] = true;
+            }
+
+            $messages[] = [
+                'role' => $role,
+                'content' => $content
+            ];
         }
 
-        if (preg_match('/(وزارة|بلدية|التربية|الكهرباء|الصحة)/ui', $content)) {
-            $collected['الجهة الحكومية'] = true;
-        }
-
-        if (preg_match('/(دمشق|حلب|حمص|اللاذقية|طرطوس|مدينة)/ui', $content)) {
-            $collected['المدينة'] = true;
+        $summary = "ملخص المعلومات التي تم جمعها:\n";
+        foreach ($collected as $key => $value) {
+            $summary .= "- $key: " . ($value ? '✓ موجود' : '✘ لم يُذكر بعد') . "\n";
         }
 
         $messages[] = [
-            'role' => $role,
-            'content' => $content
-        ];
-    }
-
-    // نضيف رسالة system تلخّص شو تم جمعه
-    $summary = "ملخص المعلومات التي تم جمعها:\n";
-    foreach ($collected as $key => $value) {
-        $summary .= "- $key: " . ($value ? '✓ موجود' : '✘ لم يُذكر بعد') . "\n";
-    }
-
-    $messages[] = [
-        'role' => 'system',
-        'content' => <<<EOT
+            'role' => 'system',
+            'content' => <<<EOT
 الرجاء متابعة المحادثة بناءً على التالي:
 
 $summary
@@ -108,8 +109,8 @@ $summary
 إذا كان هناك بند لم يُذكر بعد، اسأل عنه فقط.
 لا تعيد الأسئلة التي تمت الإجابة عليها.
 EOT
-    ];
+        ];
 
-    return $messages;
-}
+        return $messages;
+    }
 }
