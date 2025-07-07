@@ -50,7 +50,7 @@ class UserComplaintController extends Controller
         if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
         $complaint->is_emergency = $aiRating;
     } else {
-        // غير ذلك، استخدم القيمة الافتراضية 1
+        
         $complaint->is_emergency = 1;
     }
 
