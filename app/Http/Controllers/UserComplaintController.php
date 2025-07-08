@@ -40,11 +40,11 @@ public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analy
     }
 
     // تعيين user_id حسب كونها شكوى مجهولة أو لا
-    $validated['user_id'] = ($validated['anonymous'] ?? false) ? null : Auth::id();
+    //$validated['user_id'] = ($validated['anonymous'] ?? false) ? null : Auth::id();
 
-    /* $validated = $request->validated();
+    $validated = $request->validated();
     $validated['anonymous'] = (int) $validated['anonymous']; // تأكيد أنها رقم 0 أو 1
-    $validated['user_id'] = $validated['anonymous'] === 1 ? null : Auth::id(); */
+    $validated['user_id'] = $validated['anonymous'] === 1 ? null : Auth::id();
 
 
     // إنشاء الشكوى
@@ -94,7 +94,7 @@ public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analy
      */
     public function destroy($id)
     {
-        $complaint = Complaint::where('user_id', Auth::id())->findorfail($id);
+        $complaint = Complaint::findOrFail($id);
         $complaint->delete();
         return ApiResponse::sendResponse(200,'Complaint Deleted Successfully',[]);
     }

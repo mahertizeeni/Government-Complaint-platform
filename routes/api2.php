@@ -21,10 +21,13 @@ use App\Http\Controllers\CyberComplaintController;
 }); */
 Route::controller(AuthController::class)->group(function()
 {
-    Route::post('register','register');
-    Route::post('login','login');
-    Route::post('logout','logout')->middleware('auth:sanctum');
-    Route::post('resetpassword','sendResetLink');
+    Route::post('register', 'register');
+    Route::post('login', 'login');
+    Route::post('forgotpassword', 'sendResetLink');
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', 'logout');
+        Route::post('resetpassword', 'resetPassword');
+    });
 });
 //=============Ananymous Api
 Route::middleware('auth:sanctum')->group(function () {
@@ -67,6 +70,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', IsAdmin::class])->group(func
 
     // حذف شكوى إلكترونية
     Route::delete('/cyber-complaints/{id}', [CyberComplaintController::class, 'destroy']);
+
     Route::get('/contact-us', [AdminContactUsController::class, 'index']);
 
 
