@@ -106,6 +106,7 @@ namespace App\Http\Controllers;
 
 use App\Services\ComplaintChatService;
 use App\Services\GroqService;
+use App\Services\AiComplaintAnalyzer;
 use App\Models\Complaint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -114,11 +115,16 @@ class ComplaintChatController extends Controller
 {
     protected $chatService;
     protected $groqService;
+    protected $analyzer;
 
-    public function __construct(ComplaintChatService $chatService, GroqService $groqService)
-    {
+    public function __construct(
+        ComplaintChatService $chatService,
+        GroqService $groqService,
+        AiComplaintAnalyzer $analyzer 
+    ) {
         $this->chatService = $chatService;
         $this->groqService = $groqService;
+        $this->analyzer = $analyzer; 
     }
 
     public function handleChat(Request $request)
@@ -132,7 +138,6 @@ class ComplaintChatController extends Controller
         $userMessage = $request->message;
 
         try {
-            // جلب المحادثة القديمة من Redis
             $conversation = $this->chatService->getConversation($sessionToken);
         } catch (\Exception $e) {
             Log::error("Error getting conversation: " . $e->getMessage());
@@ -140,18 +145,16 @@ class ComplaintChatController extends Controller
         }
 
         try {
-            // إذا المحادثة مكتملة، خزّن الشكوى واحذف المحادثة المؤقتة
             if ($this->conversationIsComplete($conversation)) {
-                // استخراج البيانات من المحادثة
                 $data = $this->chatService->extractComplaintData($conversation);
 
-                // تخزين الشكوى في قاعدة البيانات
+                // تحليل مستوى الطارئية من الوصف
+                $emergencyLevel = $this->analyzer->rateEmergencyLevel($data['description']);
+                $data['is_emergency'] = $emergencyLevel ?? 1;
+
                 Complaint::create($data);
 
-                // حذف المحادثة من Redis
                 $this->chatService->clearConversation($sessionToken);
-
-                // إعادة تعيين المحادثة لمحادثة جديدة
                 $conversation = [];
             }
         } catch (\Exception $e) {
@@ -159,7 +162,6 @@ class ComplaintChatController extends Controller
         }
 
         try {
-            // إضافة رسالة المستخدم للمحادثة
             $conversation[] = [
                 'content' => $userMessage,
                 'is_bot' => false,
@@ -170,7 +172,6 @@ class ComplaintChatController extends Controller
         }
 
         try {
-            // توليد رد البوت من خدمة Groq
             $botResponse = $this->groqService->generateResponse($conversation);
         } catch (\Exception $e) {
             Log::error("Error generating bot response: " . $e->getMessage());
@@ -178,14 +179,12 @@ class ComplaintChatController extends Controller
         }
 
         try {
-            // إضافة رد البوت للمحادثة
             $conversation[] = [
                 'content' => $botResponse,
                 'is_bot' => true,
                 'timestamp' => now()->toIso8601String(),
             ];
 
-            // حفظ المحادثة في Redis
             $this->chatService->saveConversation($sessionToken, $conversation);
         } catch (\Exception $e) {
             Log::error("Error saving conversation: " . $e->getMessage());
@@ -196,19 +195,12 @@ class ComplaintChatController extends Controller
         ]);
     }
 
-    /**
-     * التحقق من اكتمال المحادثة
-     * @param array $conversation
-     * @return bool
-     */
     protected function conversationIsComplete(array $conversation): bool
     {
-        // قاعدة: إذا عدد الرسائل 6 أو أكثر اعتبرها مكتملة
         if (count($conversation) >= 6) {
             return true;
         }
 
-        // أو التحقق من وجود رسالة بوت تحتوي جملة تأكيدية
         $lastBotMessage = collect($conversation)
             ->reverse()
             ->firstWhere('is_bot', true);

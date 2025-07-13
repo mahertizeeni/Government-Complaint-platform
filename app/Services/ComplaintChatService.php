@@ -56,12 +56,18 @@ class ComplaintChatService
     $cities = City::all();
     $entities = GovernmentEntity::all();
 
+    $descriptionCaptured = false;
+
     foreach ($conversation as $msg) {
         if (!$msg['is_bot']) {
-            $text = $msg['content'];
-            $data['description'] .= $text . ' ';
+            $text = trim($msg['content']);
 
-            // نفصل الكلام إلى كلمات فردية
+            // التحقق إذا كانت الرسالة وصف
+            if (!$descriptionCaptured && mb_strlen($text) > 40) {
+                $data['description'] = $text;
+                $descriptionCaptured = true;
+            }
+
             $words = explode(' ', $text);
 
             // مطابقة المدينة
@@ -71,7 +77,7 @@ class ComplaintChatService
                         similar_text(trim($city->name), trim($word), $percent);
                         if ($percent >= 70) {
                             $data['city_id'] = $city->id;
-                            break 2; // نطلع من اللوبين
+                            break 2;
                         }
                     }
                 }
@@ -94,6 +100,5 @@ class ComplaintChatService
 
     return $data;
 }
-
 
 }
