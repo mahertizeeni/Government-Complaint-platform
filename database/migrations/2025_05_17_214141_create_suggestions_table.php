@@ -11,18 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('suggestions', function (Blueprint $table) {
-            $table->id();
-            // $table->unsignedBigInteger('user_id');
-            // $table->unsignedBigInteger('government_entity_id');
-            // $table->unsignedBigInteger('city_id');
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->timestamps();
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('government_entity_id')->references('id')->on('government_entities')->onDelete('cascade');
-            $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade');
-        });
+      Schema::create('suggestions', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('user_id'); 
+    $table->unsignedBigInteger('government_entity_id');
+    $table->unsignedBigInteger('city_id');
+    $table->string('title');
+    $table->text('description')->nullable();
+    $table->timestamps();
+
+    $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+    $table->foreign('government_entity_id')->references('id')->on('government_entities')->onDelete('cascade');
+    $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade');
+});
+
+          
+  
     }
 
     /**
