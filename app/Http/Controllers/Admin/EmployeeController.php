@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\EmployeeResource;
 use Illuminate\Support\Facades\Hash;
 
 class EmployeeController extends Controller
@@ -58,4 +59,14 @@ class EmployeeController extends Controller
 
         return ApiResponse::sendResponse(200, 'Employee Deleted Successfully', null);
     }
+    public function show($id)
+{
+    $employee = Employee::with(['governmentEntity'])->findOrFail($id);
+
+    return ApiResponse::sendResponse(
+        200,
+        'Employee fetched successfully',
+        new EmployeeResource($employee)
+    );
+}
 }

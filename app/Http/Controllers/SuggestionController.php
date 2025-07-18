@@ -42,11 +42,16 @@ class SuggestionController extends Controller
     }
 
     // عرض مقترح معين
-    public function show(Suggestion $suggestion)
+    public function show($id)
     {
-        return ApiResponse::sendResponse(200, 'Suggestion details', new SuggestionResource($suggestion));
-    }
+        $suggestion = Suggestion::findOrFail($id);
 
+        return ApiResponse::sendResponse(
+            200,
+            'Suggestion fetched successfully',
+            new SuggestionResource($suggestion)
+        );
+    }
     // تحديث مقترح معين
     public function update(Request $request, Suggestion $suggestion)
     {

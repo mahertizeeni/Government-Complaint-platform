@@ -88,14 +88,14 @@ public function complaints(Request $request)
             SuggestionResource::collection($suggestions)
         );
     }
-    public function cybercomplaint()
-    {
-        $cybercomplaint = CyberComplaint::all();
+    public function show($id)
+{
+    $suggestion = Suggestion::findOrFail($id);
 
-        return ApiResponse::sendResponse(
-            200,
-            'cybercomplaint retrieved successfully.',
-            SuggestionResource::collection($cybercomplaint)
-        );
-    }
+    return ApiResponse::sendResponse(
+        200,
+        'Suggestion fetched successfully',
+        new SuggestionResource($suggestion)
+    );
+}
 }

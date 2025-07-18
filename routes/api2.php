@@ -21,10 +21,13 @@ use App\Http\Controllers\CyberComplaintController;
 }); */
 Route::controller(AuthController::class)->group(function()
 {
-    Route::post('register','register');
-    Route::post('login','login');
-    Route::post('logout','logout')->middleware('auth:sanctum');
-    Route::post('resetpassword','sendResetLink');
+    Route::post('register', 'register');
+    Route::post('login', 'login');
+    Route::post('forgotpassword', 'sendResetLink');
+    Route::post('resetpassword', 'resetPassword');
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', 'logout');
+    });
 });
 //=============Ananymous Api
 Route::middleware('auth:sanctum')->group(function () {
@@ -54,20 +57,27 @@ Route::prefix('admin')->middleware(['auth:sanctum', IsAdmin::class])->group(func
     // إدارة الموظفين
     Route::get('/employees', [EmployeeController::class, 'index']);
     Route::post('/employees', [EmployeeController::class, 'store']);
+    Route::get('/employees/{id}', [EmployeeController::class, 'show']);
     Route::put('/employees/{employee}', [EmployeeController::class, 'update']);
     Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
 
+    Route::get('/suggestions/{id}', [SuggestionController::class, 'show']);
     Route::delete('/suggestions/{suggestion}', [SuggestionController::class, 'destroy']);
 
     Route::get('/dashboard/users', [UserController::class, 'index']);
+    Route::get('/users/{id}', [UserController::class, 'show']);
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
 
-    // حذف شكوى عادية
+    //  شكوى عادية
+    Route::get('/complaints/{id}', [UserComplaintController::class, 'show']);
     Route::delete('/complaints/{id}', [userComplaintController::class, 'destroy']);
 
     // حذف شكوى إلكترونية
+    Route::get('/cyber-complaints/{id}', [CyberComplaintController::class, 'show']);
     Route::delete('/cyber-complaints/{id}', [CyberComplaintController::class, 'destroy']);
+
     Route::get('/contact-us', [AdminContactUsController::class, 'index']);
+
 
 
 

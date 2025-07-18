@@ -17,7 +17,7 @@ class CyberComplaintController extends Controller
      */
       public function index()
     {
-        $complaints =CyberComplaint::where('user_id',Auth::id())->get(); 
+        $complaints =CyberComplaint::where('user_id',Auth::id())->get();
         return ApiResponse::sendResponse(200, 'The CyberComplaints For User', CyberComplaintResource::collection($complaints));
     }
     /**
@@ -41,7 +41,7 @@ class CyberComplaintController extends Controller
             $data['evidence_file']=$filePath;
         }
         $data['user_id']= Auth::id() ;
-        $complaint = CyberComplaint::create($data); 
+        $complaint = CyberComplaint::create($data);
 return ApiResponse::sendResponse(201,'Complaint Added Successfully', new CyberComplaintResource($complaint));
 
     }
@@ -50,13 +50,16 @@ return ApiResponse::sendResponse(201,'Complaint Added Successfully', new CyberCo
      * Display the specified resource.
      */
     public function show($id)
-{
-    $Cybercomplaint = CyberComplaint::where('user_id', Auth::id())
-                                     ->where('id', $id)
-                                     ->firstOrFail();
+    {
+        $cyberComplaint = CyberComplaint::findOrFail($id);
 
-    return ApiResponse::sendResponse(200, 'CyberComplaint Details', new CyberComplaintResource($Cybercomplaint));
-}
+        return ApiResponse::sendResponse
+        (
+            200,
+            'Cyber Complaint fetched successfully',
+            new CyberComplaintResource($cyberComplaint)
+        );
+    }
 
 
     /**
@@ -80,7 +83,7 @@ return ApiResponse::sendResponse(201,'Complaint Added Successfully', new CyberCo
      */
   public function destroy($id)
     {
-        $Cybercomplaint = CyberComplaint::where('user_id', Auth::id())->findorfail($id);
+        $Cybercomplaint = CyberComplaint::findOrFail($id);
         $Cybercomplaint->delete();
         return ApiResponse::sendResponse(200,'CyberComplaint Deleted Successfully',[]);
     }
