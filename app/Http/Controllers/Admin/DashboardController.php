@@ -87,4 +87,14 @@ public function complaints(Request $request)
             SuggestionResource::collection($suggestions)
         );
     }
+    public function show($id)
+{
+    $suggestion = Suggestion::findOrFail($id);
+
+    return ApiResponse::sendResponse(
+        200,
+        'Suggestion fetched successfully',
+        new SuggestionResource($suggestion)
+    );
+}
 }

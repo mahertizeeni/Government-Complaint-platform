@@ -50,13 +50,16 @@ return ApiResponse::sendResponse(201,'Complaint Added Successfully', new CyberCo
      * Display the specified resource.
      */
     public function show($id)
-{
-    $Cybercomplaint = CyberComplaint::where('user_id', Auth::id())
-                                     ->where('id', $id)
-                                     ->firstOrFail();
+    {
+        $cyberComplaint = CyberComplaint::findOrFail($id);
 
-    return ApiResponse::sendResponse(200, 'CyberComplaint Details', new CyberComplaintResource($Cybercomplaint));
-}
+        return ApiResponse::sendResponse
+        (
+            200,
+            'Cyber Complaint fetched successfully',
+            new CyberComplaintResource($cyberComplaint)
+        );
+    }
 
 
     /**

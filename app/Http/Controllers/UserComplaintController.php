@@ -6,9 +6,10 @@ use App\Models\Complaint;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\AiComplaintAnalyzer;
 use App\Http\Resources\ComplaintResource;
 use App\Http\Requests\StoreComplaintRequest;
-use App\Services\AiComplaintAnalyzer;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class UserComplaintController extends Controller
 {
@@ -34,9 +35,8 @@ public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analy
     // معالجة المرفقات
     if ($request->hasFile('attachments')) {
         $file = $request->file('attachments');
-        $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-        $filePath = $file->storeAs('uploads', $fileName, 'public');
-        $validated['attachments'] = $filePath;
+        $uploadedFileUrl = Cloudinary::upload($file->getRealPath())->getSecurePath();
+        $validated['attachments'] = $uploadedFileUrl;
     }
 
     // تعيين user_id حسب كونها شكوى مجهولة أو لا
@@ -72,14 +72,17 @@ public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analy
     /**
      * Display the specified resource.
      */
-    public function show($id)
-    {
-        $complaint = Complaint::where('user_id', Auth::id())
-    ->where('id', $id)
-    ->firstOrFail();
+public function show($id)
+{
+    $complaint = Complaint::with(['user', 'governmentEntity', 'city'])->findOrFail($id);
 
-        return $complaint;
-    }
+    return ApiResponse::sendResponse(
+        200,
+        'Complaint fetched successfully',
+        new ComplaintResource($complaint)
+    );
+}
+
 
     /**
      * Update the specified resource in storage.
