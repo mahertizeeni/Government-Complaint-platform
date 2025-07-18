@@ -9,17 +9,20 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+    public $withinTransaction = false;
+
     public function up(): void
     {
         Schema::create('employees', function (Blueprint $table) {
-            $table->id();
-            $table->String('name');
-            $table->string('email')->unique();
-            $table->foreignId('government_entity_id')->constrained()->onDelete('cascade');
-            $table->foreignId('city_id')->constrained()->onDelete('cascade');
-            $table->string('password');
-            $table->timestamps();
-        });
+    $table->id();
+    $table->string('name');
+    $table->string('email')->unique();
+    $table->foreignId('government_entity_id')->constrained()->onDelete('cascade');
+    $table->foreignId('city_id')->constrained()->onDelete('cascade');
+    $table->string('password');
+    $table->timestamps();
+});
+
     }
 
     /**

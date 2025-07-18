@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Helpers\ApiResponse;
-use App\Models\CyberComplaint;
 use App\Models\Employee;
+use App\Helpers\ApiResponse;
+use Illuminate\Http\Request;
+use App\Models\CyberComplaint;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Http\Resources\CyberComplaintResource;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class EmployeeCyberComplaintsController extends Controller
@@ -24,4 +26,35 @@ class EmployeeCyberComplaintsController extends Controller
     return ApiResponse::sendResponse(200,'Get Complaints',$complaints);
 
  }
+ public function show($id)
+{
+    $employee = Auth::user();
+
+    $cybercomplaint = CyberComplaint::where('id', $id)
+        ->first();
+
+    if (!$cybercomplaint) {
+        return ApiResponse::sendResponse(404, 'cybercomplaint not found or unauthorized', []);
+    }
+
+    return ApiResponse::sendResponse(200, 'cybercomplaint retrieved successfully', new CyberComplaintResource($cybercomplaint));
+}
+public function updateStatus(Request $request , $id)
+{
+ $request->validate(([
+  'status'=>'required|in:pending,accepted,rejected',
+ ]));
+$CyberComplaint=CyberComplaint::find($id);
+
+if(!$CyberComplaint)
+{
+ return ApiResponse::sendResponse(404,'Not Found',[]);
+}
+$CyberComplaint->status=$request->status ;
+$CyberComplaint->save();
+// ارسال الايميل
+    Mail::to($CyberComplaint->user->email)->send(new \App\Mail\CyberComplaintStatusUpdated($CyberComplaint));
+
+return ApiResponse::sendResponse(200,'Status Updated Successfully');
+}
 }

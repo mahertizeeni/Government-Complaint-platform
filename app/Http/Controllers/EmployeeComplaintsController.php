@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use App\Helpers\ApiResponse;
 use App\Models\Complaint;
-use Illuminate\Support\Facades\Auth;
+use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
+use App\Http\Resources\ComplaintResource;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 
 
@@ -26,6 +28,8 @@ class EmployeeComplaintsController extends Controller
     return ApiResponse::sendResponse(200,'Get Complaints',$complaints);
 
  }
+
+ 
  ### another way for Get By Gate and policy
 //  public function getComplaints(Request $request)
 // {
@@ -39,19 +43,44 @@ class EmployeeComplaintsController extends Controller
 
 //     return ApiResponse::sendResponse(200, 'Get Complaints', $complaints);
 // }
-public function updateStatus(Request $request , $id)
-{
- $request->validate(([
-  'status'=>'required|in:pending,accepted,rejected',
- ]));
-$complaint=Complaint::find($id);
 
-if(!$complaint)
+
+  public function show($id)
 {
- return ApiResponse::sendResponse(404,'Not Found',[]);
+    $employee = Auth::user();
+
+    $complaint = Complaint::where('id', $id)
+        ->where('government_entity_id', $employee->government_entity_id)
+        ->where('city_id', $employee->city_id)
+        ->first();
+
+    if (!$complaint) {
+        return ApiResponse::sendResponse(404, 'Complaint not found or unauthorized', []);
+    }
+
+    return ApiResponse::sendResponse(200, 'Complaint retrieved successfully', new ComplaintResource($complaint));
 }
-$complaint->status=$request->status ;
-$complaint->save();
-return ApiResponse::sendResponse(200,'Status Updated Successfully');
+
+
+public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status' => 'required|in:pending,accepted,rejected',
+    ]);
+
+    $complaint = Complaint::find($id);
+
+    if (!$complaint) {
+        return ApiResponse::sendResponse(404, 'Not Found', []);
+    }
+
+    $complaint->status = $request->status;
+    $complaint->save();
+
+    // ارسال الايميل
+    Mail::to($complaint->user->email)->send(new \App\Mail\ComplaintStatusUpdated($complaint));
+
+    return ApiResponse::sendResponse(200, 'Status Updated Successfully');
 }
+
 }

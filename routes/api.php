@@ -15,20 +15,14 @@ use App\Http\Controllers\EmployeeSuggestionController;
 use App\Http\Controllers\EmployeeCyberComplaintsController;
 use Laravel\Sanctum\Sanctum;
 
-/* Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
-}); */
-
-
-Route::get('/user', function (Request $request) {
-    return 'hello from api ';
-});
-Route::post('/chatai', [ComplaintChatController::class, 'handleChat']);
 
 
 ########## ChatBot Endpoint
-Route::middleware('web')->post('/chat', [SmartChatController::class, 'chat']);
-Route::get('/chatr', [SmartChatController::class, 'resetChat']);
+
+Route::post('/chatai', [ComplaintChatController::class, 'handleChat'])->middleware('auth:sanctum');
+
+
+
 
 ######### ContactUs Endpoint
 Route::post('/contactus',[ContactUsController::class, '__invoke']);
@@ -47,12 +41,23 @@ Route::prefix('employee')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         #### Get Complaints Gor Employee 
         Route::get('complaints',[EmployeeComplaintsController::class,'getComplaints']);
+        #### Get Complaint Gor Employee By id 
+        Route::get('complaint/{id}',[EmployeeComplaintsController::class,'show']);
+        #### Update Complaint Status
+        Route::put('complaints/{id}/status',[EmployeeComplaintsController::class,'updateStatus']);
+
         #### Get Suggestion Gor Employee 
         Route::get('suggestion',[EmployeeSuggestionController::class,'getSuggestions']);
+        #### Get suggestion Gor Employee By id 
+        Route::get('suggestion/{id}',[EmployeeSuggestionController::class,'show']);
+
         #### Get Cybercomplaints Gor Employee 
         Route::get('cybercomplaints',[EmployeeCyberComplaintsController::class,'getComplaints']);
-        #### Update Status
-        Route::put('complaints/{id}/status',[EmployeeComplaintsController::class,'updateStatus']);
+         #### Get cyberComplaint Gor Employee By id 
+        Route::get('cybercomplaint/{id}',[EmployeeCyberComplaintsController::class,'show']);
+    
+        #### Update CyberComplaint Status
+        Route::put('cybercomplaints/{id}',[EmployeeCyberComplaintsController::class,'updateStatus']);
     });
 });
 

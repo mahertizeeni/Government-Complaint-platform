@@ -16,6 +16,7 @@ class AiComplaintAnalyzer
                 'Authorization' => 'Bearer ' . $apiKey,
             ])->post('https://openrouter.ai/api/v1/chat/completions', [
                 'model' => 'mistralai/mistral-7b-instruct',
+                'temperature' => 0,
                 'messages' => [
                     ['role' => 'system', 'content' => 'أنت مساعد ذكي لتحليل شكاوى المواطنين. مهمتك تحديد مدى طارئ الشكوى اعتمادًا على وصفها.
 

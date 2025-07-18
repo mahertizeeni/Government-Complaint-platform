@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Suggestion;
 use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
+use App\Http\Resources\SuggestionResource;
 use Illuminate\Support\Facades\Auth;
 
 class EmployeeSuggestionController extends Controller
@@ -35,4 +36,20 @@ $suggestion->status=$request->status ;
 $suggestion->save();
 return ApiResponse::sendResponse(200,'Status Updated Successfully');
 }
+public function show($id)
+{
+    $employee = Auth::user();
+
+    $suggestion = Suggestion::where('id', $id)
+        ->where('government_entity_id', $employee->government_entity_id)
+        ->where('city_id', $employee->city_id)
+        ->first();
+
+    if (!$suggestion) {
+        return ApiResponse::sendResponse(404, 'suggestion not found or unauthorized', []);
+    }
+
+    return ApiResponse::sendResponse(200, 'suggestion retrieved successfully', new SuggestionResource($suggestion));
+}
+
 }

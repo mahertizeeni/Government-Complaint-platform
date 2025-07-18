@@ -39,4 +39,9 @@ public function governmentEntity()
     {
     return $this->belongsTo(GovernmentEntity::class);
     }
+    public function handled_by()
+{
+    return $this->belongsTo(Employee::class, 'handled_by_id'); // أو Admin::class
+}
+
 }

@@ -15,54 +15,59 @@ class GroqService
         $this->apiKey = env('GROQ_API_KEY');
     }
 
-public function generateResponse(array $conversationHistory): string
-{
-    $messages = $this->preparePrompt($conversationHistory);
+    public function generateResponse(array $conversationHistory): string
+    {
+        $messages = $this->preparePrompt($conversationHistory);
 
-    // سجل الرسائل المُرسلة إلى النموذج (للمراجعة)
-    Log::info('Prepared messages for Groq:', $messages);
+        // سجل الرسائل المُرسلة إلى النموذج (للمراجعة)
+        Log::info('Prepared messages for Groq:', $messages);
 
-    $response = Http::withHeaders([
-        'Authorization' => 'Bearer ' . $this->apiKey,
-        'Content-Type' => 'application/json',
-        'HTTP-Referer' => 'http://localhost'
-    ])->post($this->endpoint, [
-        'model' => 'llama-3.3-70b-versatile',
-        'messages' => $messages,
-        'temperature' => 0.7,
-    ]);
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'HTTP-Referer' => 'http://localhost'
+        ])->post($this->endpoint, [
+            'model' => 'llama-3.3-70b-versatile',
+            'messages' => $messages,
+            'temperature' => 0.3,  // خفض درجة العشوائية لتقليل الأخطاء اللغوية
+        ]);
 
-    Log::info('Groq API response: ' . $response->body());
+        Log::info('Groq API response: ' . $response->body());
 
-    if ($response->failed()) {
-        Log::error('Groq API call failed: ' . $response->body());
-        return 'فشل في الاتصال بالخدمة الخارجية';
+        if ($response->failed()) {
+            Log::error('Groq API call failed: ' . $response->body());
+            return 'فشل في الاتصال بالخدمة الخارجية';
+        }
+
+        return $response->json()['choices'][0]['message']['content'] ?? 'عذرًا، حدث خطأ في المعالجة';
     }
 
-    return $response->json()['choices'][0]['message']['content'] ?? 'عذرًا، حدث خطأ في المعالجة';
-}
-
-    protected function preparePrompt(array $history): array
+  protected function preparePrompt(array $history): array
 {
-    $systemMessage = [
-        'role' => 'system',
-        'content' => <<<EOT
-أنت مساعد ذكي لمساعدة المواطنين في تقديم الشكاوى. 
-مهمتك هي جمع المعلومات التالية فقط:
-1. تفاصيل الحادثة
-2. الجهة الحكومية
-3. المدينة
+   $systemMessage = [
+    'role' => 'system',
+    'content' => <<<EOT
+أنت مساعد ذكي تتحدث فقط باللغة العربية الفصحى.
 
-❌ لا تطلب رقم هاتف أو بريد إلكتروني.
-✅ لا تكرر الأسئلة التي أجاب عنها المستخدم.
-✅ تابع من حيث توقفت فقط.
+مهمتك هي مساعدة المواطن على تقديم شكوى عبر جمع المعلومات التالية:
+1. وصف تفصيلي للمشكلة  
+2. اسم الجهة الحكومية المسؤولة  
+3. المدينة التي حدثت فيها المشكلة
+
+✅ بعد أن يرسل المستخدم وصف المشكلة، أظهر تعليقًا تعاطفيًا صغيرًا يعكس فهمك للوضع، ثم تابع بالسؤال التالي.
+
+❌ لا تطلب بريدًا إلكترونيًا أو رقم هاتف  
+✅ لا تكرر الأسئلة التي تمّت الإجابة عليها  
+✅ تابع من حيث توقفت فقط  
+✅ لا تخرج عن السياق الرسمي والمفيد
 EOT
-    ];
+];
+
 
     $messages = [$systemMessage];
 
     $collected = [
-        'نوع الشكوى' => false,
         'تفاصيل الحادثة' => false,
         'الجهة الحكومية' => false,
         'المدينة' => false,
@@ -72,8 +77,6 @@ EOT
         $role = $msg['is_bot'] ? 'assistant' : 'user';
         $content = $msg['content'];
 
-
-
         if (mb_strlen($content) > 40) {
             $collected['تفاصيل الحادثة'] = true;
         }
@@ -82,17 +85,14 @@ EOT
             $collected['الجهة الحكومية'] = true;
         }
 
-        if (preg_match('/(دمشق|حلب|حمص|اللاذقية|طرطوس|مدينة)/ui', $content)) {
+        if (preg_match('/(دمشق|حلب|حمص|اللاذقية|طرطوس|الرياض|جدة|مكة)/ui', $content)) {
             $collected['المدينة'] = true;
         }
 
-        $messages[] = [
-            'role' => $role,
-            'content' => $content
-        ];
+        $messages[] = compact('role', 'content');
     }
 
-    // نضيف رسالة system تلخّص شو تم جمعه
+    // أضف رسالة system ذكية في النهاية لتوجيه البوت
     $summary = "ملخص المعلومات التي تم جمعها:\n";
     foreach ($collected as $key => $value) {
         $summary .= "- $key: " . ($value ? '✓ موجود' : '✘ لم يُذكر بعد') . "\n";
@@ -101,15 +101,16 @@ EOT
     $messages[] = [
         'role' => 'system',
         'content' => <<<EOT
-الرجاء متابعة المحادثة بناءً على التالي:
+تابع المحادثة بناءً على التالي:
 
 $summary
 
-إذا كان هناك بند لم يُذكر بعد، اسأل عنه فقط.
-لا تعيد الأسئلة التي تمت الإجابة عليها.
+اسأل فقط عن المعلومات غير الموجودة.
+لا تكرر ما تم سؤاله مسبقًا.
 EOT
     ];
 
     return $messages;
 }
+
 }
