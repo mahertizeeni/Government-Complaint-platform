@@ -24,9 +24,9 @@ Route::controller(AuthController::class)->group(function()
     Route::post('register', 'register');
     Route::post('login', 'login');
     Route::post('forgotpassword', 'sendResetLink');
+    Route::post('resetpassword', 'resetPassword');
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', 'logout');
-        Route::post('resetpassword', 'resetPassword');
     });
 });
 //=============Ananymous Api
