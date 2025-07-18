@@ -7,6 +7,7 @@ use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\CyberComplaint;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Resources\CyberComplaintResource;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -51,6 +52,9 @@ if(!$CyberComplaint)
 }
 $CyberComplaint->status=$request->status ;
 $CyberComplaint->save();
+// ارسال الايميل
+    Mail::to($CyberComplaint->user->email)->send(new \App\Mail\CyberComplaintStatusUpdated($CyberComplaint));
+
 return ApiResponse::sendResponse(200,'Status Updated Successfully');
 }
 }

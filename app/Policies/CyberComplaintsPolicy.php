@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Admin;
 use App\Models\User;
 use App\Models\Employee;
 use App\Models\CyberComplaint;
@@ -15,7 +16,7 @@ class CyberComplaintsPolicy
      */
     public function viewAny(Authenticatable  $user): bool
     {
-        return $user instanceof Employee|| $user instanceof User ;
+        return $user instanceof Employee|| $user instanceof User  || $user instanceof Admin;
     }
     
 
@@ -31,6 +32,10 @@ class CyberComplaintsPolicy
       elseif($user instanceof User)
       { 
         return $user->id === $cyberComplaint->user_id;
+      }
+      elseif($user instanceof Admin)
+      { 
+        return  $cyberComplaint->get();
       }
       return false ;
     }
@@ -59,7 +64,7 @@ class CyberComplaintsPolicy
      */
     public function delete(Authenticatable $user, CyberComplaint $cyberComplaint): bool
     {
-        return $user instanceof User && $user->id === $cyberComplaint->user_id;
+        return $user instanceof User && $user->id === $cyberComplaint->user_id || $user instanceof Admin ;
 
     }
 

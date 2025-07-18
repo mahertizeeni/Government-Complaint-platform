@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Admin;
 use App\Models\Complaint;
 use App\Models\Employee;
 use App\Models\User;
@@ -16,7 +17,7 @@ class ComplaintsPolicy
      */
     public function viewAny(Authenticatable $user): bool
     {
-        return $user instanceof Employee || $user instanceof User ;
+        return $user instanceof Employee || $user instanceof User || $user instanceof Admin ;
     }
 
     /**
@@ -31,6 +32,10 @@ class ComplaintsPolicy
         }
         if($user instanceof User){
             return $user->id=== $complaint->user_id ;
+           
+        }
+        if($user instanceof Admin){
+            return $complaint->get() ;
            
         }
         return false ;
@@ -59,7 +64,7 @@ class ComplaintsPolicy
      */
     public function delete(Authenticatable $user, Complaint $complaint): bool
     {
-        return $user instanceof User && $user->id === $complaint->user_id;
+        return $user instanceof User && $user->id === $complaint->user_id || $user instanceof Admin ;
 
     }
 

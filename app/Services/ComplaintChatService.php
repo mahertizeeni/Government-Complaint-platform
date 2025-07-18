@@ -50,7 +50,7 @@ class ComplaintChatService
         'user_id' => Auth::id(),
         'city_id' => null,
         'government_entity_id' => null,
-        'description' => '',
+        'description' => null,
     ];
 
     $cities = City::all();
@@ -62,8 +62,8 @@ class ComplaintChatService
         if (!$msg['is_bot']) {
             $text = trim($msg['content']);
 
-            // التحقق إذا كانت الرسالة وصف
-            if (!$descriptionCaptured && mb_strlen($text) > 40) {
+            // خزن أول رسالة وصف فقط
+            if (!$descriptionCaptured) {
                 $data['description'] = $text;
                 $descriptionCaptured = true;
             }
@@ -72,26 +72,20 @@ class ComplaintChatService
 
             // مطابقة المدينة
             if (!$data['city_id']) {
-                foreach ($words as $word) {
-                    foreach ($cities as $city) {
-                        similar_text(trim($city->name), trim($word), $percent);
-                        if ($percent >= 70) {
-                            $data['city_id'] = $city->id;
-                            break 2;
-                        }
+                foreach ($cities as $city) {
+                    if (mb_stripos($text, $city->name) !== false) {
+                        $data['city_id'] = $city->id;
+                        break;
                     }
                 }
             }
 
             // مطابقة الجهة الحكومية
             if (!$data['government_entity_id']) {
-                foreach ($words as $word) {
-                    foreach ($entities as $entity) {
-                        similar_text(trim($entity->name), trim($word), $percent);
-                        if ($percent >= 70) {
-                            $data['government_entity_id'] = $entity->id;
-                            break 2;
-                        }
+                foreach ($entities as $entity) {
+                    if (mb_stripos($text, $entity->name) !== false) {
+                        $data['government_entity_id'] = $entity->id;
+                        break;
                     }
                 }
             }
@@ -100,5 +94,4 @@ class ComplaintChatService
 
     return $data;
 }
-
 }

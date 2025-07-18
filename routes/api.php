@@ -15,19 +15,14 @@ use App\Http\Controllers\EmployeeSuggestionController;
 use App\Http\Controllers\EmployeeCyberComplaintsController;
 use Laravel\Sanctum\Sanctum;
 
-/* Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
-}); */
 
 
-use Illuminate\Support\Facades\Mail;
+########## ChatBot Endpoint
 
 Route::post('/chatai', [ComplaintChatController::class, 'handleChat'])->middleware('auth:sanctum');
 
 
-########## ChatBot Endpoint
-Route::middleware('web')->post('/chat', [SmartChatController::class, 'chat']);
-Route::get('/chatr', [SmartChatController::class, 'resetChat']);
+
 
 ######### ContactUs Endpoint
 Route::post('/contactus',[ContactUsController::class, '__invoke']);
