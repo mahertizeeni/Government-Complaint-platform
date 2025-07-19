@@ -6,10 +6,11 @@ use App\Models\Complaint;
 use App\Models\Suggestion;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
+use App\Models\CyberComplaint;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ComplaintResource;
 use App\Http\Resources\SuggestionResource;
-use App\Models\CyberComplaint;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class DashboardController extends Controller
 {
@@ -36,10 +37,11 @@ class DashboardController extends Controller
 
         return ApiResponse::sendResponse(200, 'Dashboard statistics retrieved successfully.', $stats);
     }
+ use AuthorizesRequests;
 
     // جميع الشكاوى مع فلترة اختيارية
 public function complaints(Request $request)
-{
+{   $this->authorize('viewAny',Complaint::class);
     $query = Complaint::with(['governmentEntity', 'city']);
 
     if ($request->filled('city_id')) {
@@ -79,7 +81,7 @@ public function complaints(Request $request)
 
     // جميع المقترحات
     public function suggestions()
-    {
+    {  $this->authorize('viewAny',Suggestion::class);
         $suggestions = Suggestion::all();
 
         return ApiResponse::sendResponse(
@@ -89,7 +91,7 @@ public function complaints(Request $request)
         );
     }
     public function cybercomplaint()
-    {
+    {  $this->authorize('viewAny',cybercomplaint::class);
         $cybercomplaint = CyberComplaint::all();
 
         return ApiResponse::sendResponse(

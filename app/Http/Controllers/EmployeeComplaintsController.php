@@ -47,6 +47,8 @@ class EmployeeComplaintsController extends Controller
 
   public function show($id)
 {
+   $this->authorize('update',Complaint::class);
+
     $employee = Auth::user();
 
     $complaint = Complaint::where('id', $id)

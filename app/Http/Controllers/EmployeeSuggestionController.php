@@ -3,15 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Suggestion;
-use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
-use App\Http\Resources\SuggestionResource;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\SuggestionResource;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class EmployeeSuggestionController extends Controller
 {
+    use AuthorizesRequests;
      public function getSuggestions(Request $request)
  {
+     $this->authorize('viewAny',Suggestion::class);
         $employee = Auth::user();
     $suggestions = Suggestion::where('government_entity_id',$employee->government_entity_id)
     ->where('city_id',$employee->city_id)
