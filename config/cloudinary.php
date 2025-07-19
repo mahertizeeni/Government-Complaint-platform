@@ -47,10 +47,4 @@ return [
      * Controller action to get cloud_image_url from Blade Upload Widget
      */
     'upload_action' => env('CLOUDINARY_UPLOAD_ACTION'),
-    
-
-
-    'cloud_url' => env('CLOUDINARY_URL'),
 ];
-
-

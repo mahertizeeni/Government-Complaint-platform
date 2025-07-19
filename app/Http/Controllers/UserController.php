@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
+use App\Http\Resources\UserResource;
 use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Auth\User;
 
@@ -20,4 +21,14 @@ class UserController extends Controller
         $user->delete();
         return ApiResponse::sendResponse(200, 'User deleted successfully');
     }
+    public function show($id)
+{
+    $user = User::findOrFail($id);
+
+    return ApiResponse::sendResponse(
+        200,
+        'User fetched successfully',
+        new UserResource($user)
+    );
+}
 }

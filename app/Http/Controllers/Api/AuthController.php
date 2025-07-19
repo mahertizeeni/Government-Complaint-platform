@@ -9,15 +9,16 @@ use Illuminate\Http\Request;
 use App\Mail\ResetPasswordMail;
 use Illuminate\Validation\Rules;
 use App\Http\Controllers\Controller;
+use App\Models\Password_Reset_Token;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\NewRegisterRequest;
-use App\Models\Password_Reset_Token;
-use App\Models\Password_reset_token as ModelsPassword_reset_token;
-use App\Models\PasswordReset as ModelsPasswordReset;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
+use App\Models\PasswordReset as ModelsPasswordReset;
+use App\Models\Password_reset_token as ModelsPassword_reset_token;
 
 class AuthController extends Controller
 {
@@ -129,38 +130,73 @@ public function logout(Request $request)
     $request->user()->currentAccessToken()->delete();
     return ApiResponse::sendResponse(200,'LOgout succsesfully', null);
 }
-public function sendResetLink(Request $request)
+ public function sendResetLink(Request $request)
 {
-    $validator = Validator::make($request->all(), [
-        'identifier' => ['required', 'string'], // حقل واحد للبريد الإلكتروني أو الرقم الوطني
-    ]);
+        $validator = Validator::make($request->all(), [
+            'identifier' => ['required', 'string'], // email أو national_id
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return ApiResponse::sendResponse(422, 'Validation error', $validator->errors());
+        }
+
+        $user = User::where('email', $request->identifier)
+                    ->orWhere('national_id', $request->identifier)
+                    ->first();
+
+        if (!$user) {
+            return ApiResponse::sendResponse(401, "These credentials don't exist", null);
+        }
+
+        $code = strtoupper(Str::random(6));
+
+        Password_Reset_Token::where('email', $user->email)->delete(); // حذف الرموز السابقة
+
+        Password_Reset_Token::create([
+            'email' => $user->email,
+            'token' => $code,
+            'created_at' => now(),
+        ]);
+
+        Mail::to($user->email)->send(new ResetPasswordMail($code));
+
+        return ApiResponse::sendResponse(200, 'Reset code sent to your email');
+}
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'email'],
+            'token' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'], // يجب أن ترسل أيضًا password_confirmation
+        ]);
+
+        if ($validator->fails()) {
+            return ApiResponse::sendResponse(422, 'Validation error', $validator->errors());
+        }
+
+        $reset = Password_Reset_Token::where('email', $request->email)
+                    ->where('token', $request->token)
+                    ->first();
+
+        if (!$reset) {
+            return ApiResponse::sendResponse(401, "Invalid or expired token", null);
+        }
+
+        if (now()->diffInMinutes($reset->created_at) > 15) {
+            return ApiResponse::sendResponse(401, "Token expired", null);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return ApiResponse::sendResponse(404, "User not found", null);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        $reset->delete();
+
+        return ApiResponse::sendResponse(200, "Password has been reset successfully");
     }
 
-
-    $user = User::where('email', $request->identifier)  // تحقق من وجود المستخدم باستخدام البريد الإلكتروني أو الرقم الوطني
-                ->orWhere('national_id', $request->identifier)
-                ->first();
-
-    if (!$user) {
-        return response()->json(['message' => 'User  not found'], 404);
-    }
-
-    // إنشاء كود إعادة تعيين مكون من ستة أحرف
-    $code = strtoupper(Str::random(6));
-
-    // تخزين الكود في قاعدة البيانات
-    Password_Reset_Token::create([
-        'email' => $user->email,
-        'token' => $code,
-        'created_at' => now(),
-    ]);
-
-    // إرسال البريد الإلكتروني
-    Mail::to($user->email)->send(new ResetPasswordMail($code));
-
-    return response()->json(['message' => 'Reset code sent to your email'], 200);
-}/*  */
 }
