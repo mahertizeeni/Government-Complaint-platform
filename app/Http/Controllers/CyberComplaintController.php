@@ -8,6 +8,7 @@ use App\Models\CyberComplaint;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\CyberComplaintResource;
 use App\Http\Requests\StoreCyberComplaintRequest;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 
 class CyberComplaintController extends Controller
@@ -33,13 +34,11 @@ class CyberComplaintController extends Controller
      */
     public function store(StoreCyberComplaintRequest $request)
     { $data = $request->validated();
-        if($request->hasFile('evidence_file'))
-        {
-            $file = $request->file('evidence_file');
-            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('uploads',$fileName,'public');
-            $data['evidence_file']=$filePath;
-        }
+        
+if ($request->hasFile('evidence_file')) {
+    $uploadedFileUrl = Cloudinary::upload($request->file('evidence_file')->getRealPath())->getSecurePath();
+    $data['evidence_file'] = $uploadedFileUrl;
+}
         $data['user_id']= Auth::id() ;
         $complaint = CyberComplaint::create($data);
 return ApiResponse::sendResponse(201,'Complaint Added Successfully', new CyberComplaintResource($complaint));

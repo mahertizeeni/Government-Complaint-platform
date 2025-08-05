@@ -18,6 +18,7 @@
         "predis/predis": "^3.0"
     },
     "require-dev": {
+        "beyondcode/laravel-er-diagram-generator": "*",
         "fakerphp/faker": "^1.23",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",
