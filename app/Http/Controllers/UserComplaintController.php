@@ -6,6 +6,7 @@ use App\Models\Complaint;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use App\Services\AiComplaintAnalyzer;
 use App\Http\Resources\ComplaintResource;
 use App\Http\Requests\StoreComplaintRequest;
@@ -28,42 +29,36 @@ class UserComplaintController extends Controller
   
 
 
-
 public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analyzer)
 {
     $validated = $request->validated();
 
+    // ✅ رفع المرفقات إلى UploadCare
+    if ($request->hasFile('attachments')) {
+        $file = $request->file('attachments');
 
-$cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+        $response = Http::attach(
+            'file', fopen($file->getPathname(), 'r'), $file->getClientOriginalName()
+        )->post('https://upload.uploadcare.com/base/', [
+            'UPLOADCARE_PUB_KEY' => env('UPLOADCARE_PUBLIC_KEY'),
+            'UPLOADCARE_STORE' => '1',
+        ]);
 
-if ($request->hasFile('attachments')) {
-    $file = $request->file('attachments');
-    $uploadedFile = $cloudinary->uploadApi()->upload($file->getRealPath());
-    $validated['attachments'] = $uploadedFile['secure_url'] ?? null;
-}
-    // تعيين user_id حسب كونها شكوى مجهولة أو لا
-    //$validated['user_id'] = ($validated['anonymous'] ?? false) ? null : Auth::id();
-
-    $validated = $request->validated();
-    $validated['anonymous'] = (int) $validated['anonymous']; // تأكيد أنها رقم 0 أو 1
-    $validated['user_id'] = $validated['anonymous'] === 1 ? null : Auth::id();
-
-
-    // إنشاء الشكوى
-        $complaint = Complaint::create($validated);
-
-    // تحليل الذكاء الاصطناعي
-    $aiRating = $analyzer->rateEmergencyLevel($complaint->description);
-
-    // إذا كان تقييم الذكاء الاصطناعي صحيح (1 أو 2 أو 3)، خزن القيمة
-        if ($aiRating !== null && in_array($aiRating, [1, 2, 3])) {
-        $complaint->is_emergency = $aiRating;
-    } else {
-        
-        $complaint->is_emergency = 1;
+        $uuid = $response['file'];
+        $validated['attachments'] = "https://ucarecdn.com/{$uuid}/";
     }
 
-        $complaint->save();
+    // ✅ تحديد user_id بناءً على ما إذا كانت الشكوى مجهولة أو لا
+    $validated['anonymous'] = (int) $validated['anonymous'];
+    $validated['user_id'] = $validated['anonymous'] === 1 ? null : Auth::id();
+
+    // ✅ إنشاء الشكوى
+    $complaint = Complaint::create($validated);
+
+    // ✅ تقييم الذكاء الاصطناعي
+    $aiRating = $analyzer->rateEmergencyLevel($complaint->description);
+    $complaint->is_emergency = in_array($aiRating, [1, 2, 3]) ? $aiRating : 1;
+    $complaint->save();
 
     return ApiResponse::sendResponse(
         201,
@@ -71,7 +66,6 @@ if ($request->hasFile('attachments')) {
         new ComplaintResource($complaint)
     );
 }
-
 
 
 
