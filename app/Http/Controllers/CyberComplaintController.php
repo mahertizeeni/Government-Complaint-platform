@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\CyberComplaint;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use App\Http\Resources\CyberComplaintResource;
 use App\Http\Requests\StoreCyberComplaintRequest;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
@@ -33,28 +34,26 @@ class CyberComplaintController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-   public function store(StoreCyberComplaintRequest $request)
+  
+public function store(StoreCyberComplaintRequest $request)
 {
     $data = $request->validated();
 
     if ($request->hasFile('evidence_file')) {
-        try {
-            $file = $request->file('evidence_file');
-            Log::info('Uploading evidence_file to Cloudinary', ['path' => $file->getRealPath()]);
-            
-            $uploadedFileUrl = Cloudinary::upload($file->getRealPath())->getSecurePath();
-            
-            Log::info('Uploaded file URL from Cloudinary', ['url' => $uploadedFileUrl]);
-            
-            $data['evidence_file'] = $uploadedFileUrl;
-        } catch (\Exception $e) {
-            Log::error('Cloudinary upload failed', ['error' => $e->getMessage()]);
-            return ApiResponse::sendResponse(500, 'File upload failed', ['error' => $e->getMessage()]);
-        }
+        $file = $request->file('evidence_file');
+        
+        $response = Http::attach(
+            'file', fopen($file->getPathname(), 'r'), $file->getClientOriginalName()
+        )->post('https://upload.uploadcare.com/base/', [
+            'UPLOADCARE_PUB_KEY' => env('UPLOADCARE_PUBLIC_KEY'),
+            'UPLOADCARE_STORE' => '1',
+        ]);
+
+        $uuid = $response['file']; // هذا هو الـ UUID يلي بنستخدمه لاحقًا
+        $data['evidence_file'] = "https://ucarecdn.com/{$uuid}/";
     }
 
     $data['user_id'] = Auth::id();
-
     $complaint = CyberComplaint::create($data);
 
     return ApiResponse::sendResponse(201, 'Complaint Added Successfully', new CyberComplaintResource($complaint));
