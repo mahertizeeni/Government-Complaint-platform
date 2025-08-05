@@ -33,11 +33,13 @@ public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analy
 {
     $validated = $request->validated();
 
-    // معالجة المرفقات
+
+$cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+
 if ($request->hasFile('attachments')) {
     $file = $request->file('attachments');
-    $uploadedFileUrl = Cloudinary::upload($file->getRealPath())->getSecurePath();
-    $validated['attachments'] = $uploadedFileUrl;
+    $uploadedFile = $cloudinary->uploadApi()->upload($file->getRealPath());
+    $validated['attachments'] = $uploadedFile['secure_url'] ?? null;
 }
     // تعيين user_id حسب كونها شكوى مجهولة أو لا
     //$validated['user_id'] = ($validated['anonymous'] ?? false) ? null : Auth::id();
