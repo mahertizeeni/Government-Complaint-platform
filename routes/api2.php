@@ -61,8 +61,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', IsAdmin::class])->group(func
     Route::put('/employees/{employee}', [EmployeeController::class, 'update']);
     Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
 
-    Route::get('/suggestions/{id}', [SuggestionController::class, 'show']);
-    Route::delete('/suggestions/{suggestion}', [SuggestionController::class, 'destroy']);
+    Route::apiResource('User-suggestions',SuggestionController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum');
+
+    // Route::get('/suggestions/{id}', [SuggestionController::class, 'show']);
+    // Route::delete('/suggestions/{suggestion}', [SuggestionController::class, 'destroy']);
 
     Route::get('/dashboard/users', [UserController::class, 'index']);
     Route::get('/users/{id}', [UserController::class, 'show']);
