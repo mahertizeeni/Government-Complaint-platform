@@ -8,22 +8,6 @@ Route::get('/',function (){
 dd('Welcome to Government Complaints Platform');
 });
 
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-
-Route::get('/test-cloudinary', function () {
-    $filePath = public_path('test.jpg');
-
-    if (!file_exists($filePath)) {
-        return response("⚠️ File not found at: $filePath", 404);
-    }
-
-    try {
-        $uploaded = Cloudinary::upload($filePath);
-        return response("✅ Uploaded! URL: " . $uploaded->getSecurePath());
-    } catch (\Exception $e) {
-        return response("❌ Error: " . $e->getMessage(), 500);
-    }
-});
 
 Route::get('/test-redis', function() {
     try {

@@ -13,7 +13,7 @@ class SuggestionController extends Controller
 {
     public function index()
     {
-        $suggestions = Suggestion::latest()->get();
+        $suggestions = Suggestion::where('user_id',Auth::id())->get();
         if ($suggestions->count() > 0) {
             return ApiResponse::sendResponse(200, 'List of suggestions', SuggestionResource::collection($suggestions));
         }
@@ -52,47 +52,19 @@ class SuggestionController extends Controller
             new SuggestionResource($suggestion)
         );
     }
-    // تحديث مقترح معين
     public function update(Request $request, Suggestion $suggestion)
     {
-        $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|required|string',
-            'government_entity_id' => 'sometimes|exists:government_entities,id',
-            'city_id' => 'sometimes|exists:cities,id',
-        ]);
+        
 
-        $suggestion->update($request->only([
-            'title', 'description', 'government_entity_id', 'city_id'
-        ]));
-
-        return ApiResponse::sendResponse(200, 'Suggestion updated successfully', new SuggestionResource($suggestion));
     }
 
     // حذف مقترح
-    public function destroy(Suggestion $suggestion)
+    public function destroy($id)
     {
+        $suggestion = Suggestion::findOrFail($id);
         $suggestion->delete();
-        return ApiResponse::sendResponse(200, 'Suggestion deleted successfully', []);
+        return ApiResponse::sendResponse(200,'Suggestion Deleted Successfully',[]);
     }
 
-    // مقترحات حسب الجهة الحكومية
-    public function byEntity($entityId)
-    {
-        $suggestions = Suggestion::where('government_entity_id', $entityId)->latest()->get();
-        if ($suggestions->count() > 0) {
-            return ApiResponse::sendResponse(200, 'Suggestions for entity retrieved successfully', SuggestionResource::collection($suggestions));
-        }
-        return ApiResponse::sendResponse(200, 'No suggestions found for this entity', []);
-    }
-
-    // مقترحات حسب المدينة
-    public function byCity($cityId)
-    {
-        $suggestions = Suggestion::where('city_id', $cityId)->latest()->get();
-        if ($suggestions->count() > 0) {
-            return ApiResponse::sendResponse(200, 'Suggestions for city retrieved successfully', SuggestionResource::collection($suggestions));
-        }
-        return ApiResponse::sendResponse(200, 'No suggestions found for this city', []);
-    }
+    
 }
