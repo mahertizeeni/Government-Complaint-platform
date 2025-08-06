@@ -3,19 +3,19 @@
 // use App\Http\Controllers\Api\AuthController;
 use App\Models\ContactUs;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\Sanctum;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ContactUsController;
 use App\Http\Controllers\SmartChatController;
-use App\Http\Controllers\ComplaintChatController;
+use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\UserComplaintController;
 use App\Http\Controllers\CyberComplaintController;
+use App\Http\Controllers\UserSuggestionController;
+use App\Http\Controllers\Api\ComplaintChatController;
 use App\Http\Controllers\employee\auth\AuthController;
 use App\Http\Controllers\EmployeeComplaintsController;
 use App\Http\Controllers\EmployeeSuggestionController;
 use App\Http\Controllers\EmployeeCyberComplaintsController;
-use App\Http\Controllers\SuggestionController;
-use App\Http\Controllers\UserSuggestionController;
-use Laravel\Sanctum\Sanctum;
 
 
 
@@ -34,7 +34,7 @@ Route::apiResource('User-Complaints',UserComplaintController::class)->only('inde
 // Route::post('/cybercomplaint',[CyberComplaintController::class,'store']);
 Route::apiResource('User-CyberComplaint',CyberComplaintController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum');
 
-Route::apiResource('Suggestions',UserSuggestionController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum') ;
+Route::apiResource('Suggestions',UserSuggestionController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum');
 
 ######## Employee account
 Route::prefix('employee')->group(function () {
