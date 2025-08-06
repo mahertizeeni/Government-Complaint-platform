@@ -35,6 +35,7 @@ class ComplaintChatController extends Controller
         $sessionToken = $request->session_token;
         $userMessage = $request->message;
 
+        // جلب المحادثة السابقة أو تهيئة جديدة
         try {
             $conversation = $this->chatService->getConversation($sessionToken);
         } catch (\Exception $e) {
@@ -42,16 +43,18 @@ class ComplaintChatController extends Controller
             return response()->json(['error' => 'خطأ في جلب المحادثة'], 500);
         }
 
+        // تحقق إذا المحادثة مكتملة (لنفس الموضوع)
         try {
             if ($this->conversationIsComplete($conversation)) {
                 $data = $this->chatService->extractComplaintData($conversation);
 
-                // تحليل مستوى الطارئية من الوصف
+                // تحليل مستوى الطارئة من الوصف
                 $emergencyLevel = $this->analyzer->rateEmergencyLevel($data['description']);
                 $data['is_emergency'] = $emergencyLevel ?? 1;
 
                 Complaint::create($data);
 
+                // مسح المحادثة بعد حفظ الشكوى
                 $this->chatService->clearConversation($sessionToken);
                 $conversation = [];
             }
@@ -59,6 +62,7 @@ class ComplaintChatController extends Controller
             Log::error("Error processing completed conversation: " . $e->getMessage());
         }
 
+        // أضف رسالة المستخدم الجديدة إلى المحادثة
         try {
             $conversation[] = [
                 'content' => $userMessage,
@@ -69,6 +73,7 @@ class ComplaintChatController extends Controller
             Log::error("Error adding user message: " . $e->getMessage());
         }
 
+        // توليد رد البوت مع إرسال المحادثة كاملة
         try {
             $botResponse = $this->groqService->generateResponse($conversation);
         } catch (\Exception $e) {
@@ -76,6 +81,7 @@ class ComplaintChatController extends Controller
             return response()->json(['error' => 'فشل في توليد الرد من الخدمة الخارجية'], 500);
         }
 
+        // أضف رد البوت إلى المحادثة واحفظها
         try {
             $conversation[] = [
                 'content' => $botResponse,
