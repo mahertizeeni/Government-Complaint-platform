@@ -21,7 +21,7 @@ use App\Http\Controllers\EmployeeCyberComplaintsController;
 
 ########## ChatBot  Endpoint
 
-Route::post('/chatai', [ComplaintChatController::class, 'chat'])->middleware('auth:sanctum');
+Route::post('/chatai', [ComplaintChatController::class, 'handleChat'])->middleware('auth:sanctum');
 
 
 
