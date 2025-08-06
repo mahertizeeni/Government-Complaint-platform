@@ -12,6 +12,7 @@ use App\Http\Controllers\UserComplaintController;
 use App\Http\Controllers\CyberComplaintController;
 use App\Http\Controllers\UserSuggestionController;
 use App\Http\Controllers\Api\ComplaintChatController;
+use App\Http\Controllers\ComplaintChatController as ControllersComplaintChatController;
 use App\Http\Controllers\employee\auth\AuthController;
 use App\Http\Controllers\EmployeeComplaintsController;
 use App\Http\Controllers\EmployeeSuggestionController;
@@ -21,7 +22,7 @@ use App\Http\Controllers\EmployeeCyberComplaintsController;
 
 ########## ChatBot  Endpoint
 
-Route::post('/chatai', [ComplaintChatController::class, 'handleChat'])->middleware('auth:sanctum');
+Route::post('/chatai', [ControllersComplaintChatController::class, 'handleChat'])->middleware('auth:sanctum');
 
 
 
