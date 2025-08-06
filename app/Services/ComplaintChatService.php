@@ -12,16 +12,43 @@ class ComplaintChatService
 {
     protected $ttl = 3600;
 
-    public function getConversation(string $sessionToken): array
-    {
-        try {
-            $history = Redis::get("complaint_chat:{$sessionToken}");
-            return $history ? json_decode($history, true) : [];
-        } catch (\Exception $e) {
-            Log::error("Redis getConversation error: " . $e->getMessage());
-            return [];
+   public function getConversation(string $sessionToken): array
+{
+    try {
+        $history = Redis::get("complaint_chat:{$sessionToken}");
+        $conversation = $history ? json_decode($history, true) : [];
+
+        // إذا المحادثة جديدة، أضف رسالة system كمقدمة
+        if (empty($conversation)) {
+            $conversation[] = [
+                'content' => <<<EOT
+أنت مساعد ذكي تتحدث فقط باللغة العربية الفصحى.
+
+مهمتك هي مساعدة المواطن على تقديم شكوى عبر جمع المعلومات التالية:
+1. وصف تفصيلي للمشكلة  
+2. اسم الجهة الحكومية المسؤولة  
+3. المدينة التي حدثت فيها المشكلة
+
+✅ بعد أن يرسل المستخدم وصف المشكلة، أظهر تعليقًا تعاطفيًا صغيرًا يعكس فهمك للوضع، ثم تابع بالسؤال التالي.
+
+❌ لا تطلب بريدًا إلكترونيًا أو رقم هاتف  
+✅ لا تكرر الأسئلة التي تمّت الإجابة عليها  
+✅ تابع من حيث توقفت فقط  
+✅ لا تخرج عن السياق الرسمي والمفيد
+EOT,
+                'is_bot' => true,
+                'timestamp' => now()->toIso8601String(),
+                'role' => 'system'  // اختياري
+            ];
         }
+
+        return $conversation;
+    } catch (\Exception $e) {
+        Log::error("Redis getConversation error: " . $e->getMessage());
+        return [];
     }
+}
+
 
     public function saveConversation(string $sessionToken, array $messages): void
     {
