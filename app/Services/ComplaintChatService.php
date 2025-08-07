@@ -10,6 +10,52 @@ use Illuminate\Support\Facades\Log;
 
 class ComplaintChatService
 {
+    public function isConversationComplete(array $conversation): bool
+{
+    $data = $this->extractComplaintData($conversation);
+    return !empty($data['description']) && !empty($data['government_entity_id']) && !empty($data['city_id']);
+}
+
+public function extractComplaintData(array $conversation): array
+{
+    $data = [
+        'user_id' => Auth::id(),
+        'description' => '',
+        'government_entity_id' => null,
+        'city_id' => null,
+    ];
+
+    foreach ($conversation as $message) {
+        if (!empty($message['is_bot'])) {
+            continue;
+        }
+
+        $content = $message['content'];
+
+        if (empty($data['description'])) {
+            $data['description'] = $content;
+            continue;
+        }
+
+        if (!$data['government_entity_id']) {
+            $entity = \App\Models\GovernmentEntity::where('name', 'like', "%$content%")->first();
+            if ($entity) {
+                $data['government_entity_id'] = $entity->id;
+                continue;
+            }
+        }
+
+        if (!$data['city_id']) {
+            $city = \App\Models\City::where('name', 'like', "%$content%")->first();
+            if ($city) {
+                $data['city_id'] = $city->id;
+            }
+        }
+    }
+
+    return $data;
+}
+
     public function getConversation(string $sessionToken): array
     {
         try {
@@ -78,48 +124,48 @@ EOT,
     /**
      * استخراج بيانات الشكوى من المحادثة.
      */
-    public function extractComplaintData(array $conversation): array
-    {
-        $data = [
-            'user_id' => Auth::id(),
-            'city_id' => null,
-            'government_entity_id' => null,
-            'description' => null,
-        ];
+    // public function extractComplaintData(array $conversation): array
+    // {
+    //     $data = [
+    //         'user_id' => Auth::id(),
+    //         'city_id' => null,
+    //         'government_entity_id' => null,
+    //         'description' => null,
+    //     ];
 
-        $cities = City::all();
-        $entities = GovernmentEntity::all();
-        $firstDesc = false;
+    //     $cities = City::all();
+    //     $entities = GovernmentEntity::all();
+    //     $firstDesc = false;
 
-        foreach ($conversation as $msg) {
-            if (!$msg['is_bot']) {
-                $text = trim($msg['content']);
+    //     foreach ($conversation as $msg) {
+    //         if (!$msg['is_bot']) {
+    //             $text = trim($msg['content']);
 
-                if (!$firstDesc) {
-                    $data['description'] = $text;
-                    $firstDesc = true;
-                }
+    //             if (!$firstDesc) {
+    //                 $data['description'] = $text;
+    //                 $firstDesc = true;
+    //             }
 
-                if (is_null($data['city_id'])) {
-                    foreach ($cities as $city) {
-                        if (mb_stripos($text, $city->name) !== false) {
-                            $data['city_id'] = $city->id;
-                            break;
-                        }
-                    }
-                }
+    //             if (is_null($data['city_id'])) {
+    //                 foreach ($cities as $city) {
+    //                     if (mb_stripos($text, $city->name) !== false) {
+    //                         $data['city_id'] = $city->id;
+    //                         break;
+    //                     }
+    //                 }
+    //             }
 
-                if (is_null($data['government_entity_id'])) {
-                    foreach ($entities as $entity) {
-                        if (mb_stripos($text, $entity->name) !== false) {
-                            $data['government_entity_id'] = $entity->id;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+    //             if (is_null($data['government_entity_id'])) {
+    //                 foreach ($entities as $entity) {
+    //                     if (mb_stripos($text, $entity->name) !== false) {
+    //                         $data['government_entity_id'] = $entity->id;
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        return $data;
-    }
+    //     return $data;
+    // }
 }
