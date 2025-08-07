@@ -33,63 +33,55 @@ class ComplaintChatController extends Controller
         ]);
 
         $sessionToken = $request->session_token;
-        $userMessage = $request->message;
+        $userMessage = trim($request->message);
 
-        try {
-            $conversation = $this->chatService->getConversation($sessionToken);
-        } catch (\Exception $e) {
-            Log::error("Error getting conversation: " . $e->getMessage());
-            return response()->json(['error' => 'خطأ في جلب المحادثة'], 500);
-        }
+        // جلب المحادثة السابقة أو تهيئة جديدة
+        $conversation = $this->chatService->getConversation($sessionToken);
 
-        try {
-            if ($this->conversationIsComplete($conversation)) {
-                $data = $this->chatService->extractComplaintData($conversation);
+        // إضافة رسالة المستخدم الجديدة
+        $conversation[] = [
+            'content' => $userMessage,
+            'is_bot' => false,
+            'timestamp' => now()->toIso8601String(),
+        ];
 
-                // تحليل مستوى الطارئة من الوصف
-                $emergencyLevel = $this->analyzer->rateEmergencyLevel($data['description']);
-                $data['is_emergency'] = $emergencyLevel ?? 1;
+        // تحقق هل المحادثة كاملة (حسب شروطك)
+        if ($this->conversationIsComplete($conversation)) {
+            // استخرج البيانات
+            $data = $this->chatService->extractComplaintData($conversation);
 
-                Complaint::create($data);
+            // تقييم مستوى الطوارئ
+            $emergencyLevel = $this->analyzer->rateEmergencyLevel($data['description'] ?? '') ?? 1;
+            $data['is_emergency'] = $emergencyLevel;
 
-                // مسح المحادثة بعد حفظ الشكوى
-                $this->chatService->clearConversation($sessionToken);
-                $conversation = [];
+            // حفظ الشكوى
+            Complaint::create($data);
+
+            // مسح المحادثة من التخزين (لإنهاء الجلسة)
+            $this->chatService->clearConversation($sessionToken);
+
+            // رد ثابت يؤكد الاستلام
+            $botResponse = "تم استلام شكواك بنجاح، وشكرًا لتواصلك معنا.";
+
+            // لا نحتاج لحفظ المحادثة بعد الآن لأننا انتهينا
+        } else {
+            // التوليد عبر Groq API بناءً على المحادثة كاملة
+            try {
+                $botResponse = $this->groqService->generateResponse($conversation);
+            } catch (\Exception $e) {
+                Log::error("Error generating bot response: " . $e->getMessage());
+                return response()->json(['error' => 'فشل في توليد الرد من الخدمة الخارجية'], 500);
             }
-        } catch (\Exception $e) {
-            Log::error("Error processing completed conversation: " . $e->getMessage());
-        }
 
-        // أضف رسالة المستخدم الجديدة
-        try {
-            $conversation[] = [
-                'content' => $userMessage,
-                'is_bot' => false,
-                'timestamp' => now()->toIso8601String(),
-            ];
-        } catch (\Exception $e) {
-            Log::error("Error adding user message: " . $e->getMessage());
-        }
-
-        // توليد رد البوت
-        try {
-            $botResponse = $this->groqService->generateResponse($conversation);
-        } catch (\Exception $e) {
-            Log::error("Error generating bot response: " . $e->getMessage());
-            return response()->json(['error' => 'فشل في توليد الرد من الخدمة الخارجية'], 500);
-        }
-
-        // أضف رد البوت واحفظ المحادثة
-        try {
+            // إضافة رد البوت للمحادثة
             $conversation[] = [
                 'content' => $botResponse,
                 'is_bot' => true,
                 'timestamp' => now()->toIso8601String(),
             ];
 
+            // حفظ المحادثة مع الرد الجديد
             $this->chatService->saveConversation($sessionToken, $conversation);
-        } catch (\Exception $e) {
-            Log::error("Error saving conversation: " . $e->getMessage());
         }
 
         return response()->json([
@@ -99,18 +91,29 @@ class ComplaintChatController extends Controller
 
     protected function conversationIsComplete(array $conversation): bool
     {
-        if (count($conversation) >= 6) {
-            return true;
+        // شرط بسيط: إذا جمعنا وصف، جهة، ومدينة في الرسائل
+        $hasDescription = false;
+        $hasEntity = false;
+        $hasCity = false;
+
+        foreach ($conversation as $msg) {
+            if (!$msg['is_bot']) {
+                $text = $msg['content'];
+
+                if (!$hasDescription && mb_strlen($text) > 20) {
+                    $hasDescription = true;
+                }
+
+                if (!$hasEntity && preg_match('/(وزارة|بلدية|التربية|الكهرباء|الصحة)/ui', $text)) {
+                    $hasEntity = true;
+                }
+
+                if (!$hasCity && preg_match('/(دمشق|حلب|حمص|اللاذقية|طرطوس|)/ui', $text)) {
+                    $hasCity = true;
+                }
+            }
         }
 
-        $lastBotMessage = collect($conversation)
-            ->reverse()
-            ->firstWhere('is_bot', true);
-
-        if ($lastBotMessage && str_contains($lastBotMessage['content'], 'تم استلام شكواك')) {
-            return true;
-        }
-
-        return false;
+        return $hasDescription && $hasEntity && $hasCity;
     }
 }

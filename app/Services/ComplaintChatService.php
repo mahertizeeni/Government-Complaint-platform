@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Log;
 
 class ComplaintChatService
 {
-    /**
-     * جلب المحادثة أو تهيئة رسالة system تمهيدية.
-     */
     public function getConversation(string $sessionToken): array
     {
         try {
@@ -23,6 +20,7 @@ class ComplaintChatService
 
             $conversation = $chat->conversation ? json_decode($chat->conversation, true) : [];
 
+            // إذا المحادثة فارغة أضف رسالة system تمهيدية
             if (empty($conversation)) {
                 $conversation[] = [
                     'content' => <<<'EOT'
@@ -56,9 +54,6 @@ EOT,
         }
     }
 
-    /**
-     * حفظ المحادثة.
-     */
     public function saveConversation(string $sessionToken, array $messages): void
     {
         try {
@@ -71,9 +66,6 @@ EOT,
         }
     }
 
-    /**
-     * مسح المحادثة.
-     */
     public function clearConversation(string $sessionToken): void
     {
         try {
