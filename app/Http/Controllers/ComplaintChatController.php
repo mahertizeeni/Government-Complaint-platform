@@ -144,7 +144,7 @@ class ComplaintChatController extends Controller
         $this->analyzer = $analyzer;
     }
 
-    public function chat(Request $request)
+    public function handleChat(Request $request)
     {
         $sessionToken = $request->input('session_token');
         $userMessage = $request->input('message');
