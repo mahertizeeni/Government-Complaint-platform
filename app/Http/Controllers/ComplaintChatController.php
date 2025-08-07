@@ -22,18 +22,18 @@ class ComplaintChatController extends Controller
     ) {
         $this->chatService = $chatService;
         $this->groqService = $groqService;
-        $this->analyzer = $analyzer; 
+        $this->analyzer     = $analyzer; 
     }
 
     public function handleChat(Request $request)
     {
         $request->validate([
-            'message' => 'required|string',
+            'message'       => 'required|string',
             'session_token' => 'required|string',
         ]);
 
         $sessionToken = $request->session_token;
-        $userMessage = $request->message;
+        $userMessage  = $request->message;
 
         // جلب المحادثة السابقة أو تهيئة جديدة
         try {
@@ -43,12 +43,12 @@ class ComplaintChatController extends Controller
             return response()->json(['error' => 'خطأ في جلب المحادثة'], 500);
         }
 
-        // تحقق إذا المحادثة مكتملة (لنفس الموضوع)
+        // تحقق إذا المحادثة مكتملة
         try {
             if ($this->conversationIsComplete($conversation)) {
                 $data = $this->chatService->extractComplaintData($conversation);
 
-                // تحليل مستوى الطارئة من الوصف
+                // تحليل مستوى الطوارئ
                 $emergencyLevel = $this->analyzer->rateEmergencyLevel($data['description']);
                 $data['is_emergency'] = $emergencyLevel ?? 1;
 
@@ -62,18 +62,14 @@ class ComplaintChatController extends Controller
             Log::error("Error processing completed conversation: " . $e->getMessage());
         }
 
-        // أضف رسالة المستخدم الجديدة إلى المحادثة
-        try {
-            $conversation[] = [
-                'content' => $userMessage,
-                'is_bot' => false,
-                'timestamp' => now()->toIso8601String(),
-            ];
-        } catch (\Exception $e) {
-            Log::error("Error adding user message: " . $e->getMessage());
-        }
+        // أضف رسالة المستخدم
+        $conversation[] = [
+            'content'   => $userMessage,
+            'is_bot'    => false,
+            'timestamp' => now()->toIso8601String(),
+        ];
 
-        // توليد رد البوت مع إرسال المحادثة كاملة
+        // توليد رد البوت
         try {
             $botResponse = $this->groqService->generateResponse($conversation);
         } catch (\Exception $e) {
@@ -81,18 +77,13 @@ class ComplaintChatController extends Controller
             return response()->json(['error' => 'فشل في توليد الرد من الخدمة الخارجية'], 500);
         }
 
-        // أضف رد البوت إلى المحادثة واحفظها
-        try {
-            $conversation[] = [
-                'content' => $botResponse,
-                'is_bot' => true,
-                'timestamp' => now()->toIso8601String(),
-            ];
-
-            $this->chatService->saveConversation($sessionToken, $conversation);
-        } catch (\Exception $e) {
-            Log::error("Error saving conversation: " . $e->getMessage());
-        }
+        // أضف رد البوت واحفظ المحادثة
+        $conversation[] = [
+            'content'   => $botResponse,
+            'is_bot'    => true,
+            'timestamp' => now()->toIso8601String(),
+        ];
+        $this->chatService->saveConversation($sessionToken, $conversation);
 
         return response()->json([
             'response' => $botResponse,
@@ -105,14 +96,10 @@ class ComplaintChatController extends Controller
             return true;
         }
 
-        $lastBotMessage = collect($conversation)
+        $lastBot = collect($conversation)
             ->reverse()
             ->firstWhere('is_bot', true);
 
-        if ($lastBotMessage && str_contains($lastBotMessage['content'], 'تم استلام شكواك')) {
-            return true;
-        }
-
-        return false;
+        return $lastBot && str_contains($lastBot['content'], 'تم استلام شكواك');
     }
 }
