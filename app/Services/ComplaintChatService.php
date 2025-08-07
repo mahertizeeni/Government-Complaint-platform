@@ -10,8 +10,9 @@ use Illuminate\Support\Facades\Log;
 
 class ComplaintChatService
 {
-    protected $ttl = 3600; // يمكن تجاهل TTL لقاعدة البيانات أو استخدام job لحذف السجلات القديمة
-
+    /**
+     * جلب المحادثة أو تهيئة رسالة system تمهيدية.
+     */
     public function getConversation(string $sessionToken): array
     {
         try {
@@ -20,13 +21,11 @@ class ComplaintChatService
                 ['conversation' => null]
             );
 
-            $conversation = $chat->conversation
-                ? json_decode($chat->conversation, true)
-                : [];
+            $conversation = $chat->conversation ? json_decode($chat->conversation, true) : [];
 
             if (empty($conversation)) {
                 $conversation[] = [
-                    'content'   => <<<'EOT'
+                    'content' => <<<'EOT'
 أنت مساعد ذكي تتحدث فقط باللغة العربية الفصحى.
 
 مهمتك هي مساعدة المواطن على تقديم شكوى عبر جمع المعلومات التالية:
@@ -41,9 +40,9 @@ class ComplaintChatService
 ✅ تابع من حيث توقفت فقط  
 ✅ لا تخرج عن السياق الرسمي والمفيد
 EOT,
-                    'is_bot'    => true,
+                    'is_bot' => true,
                     'timestamp' => now()->toIso8601String(),
-                    'role'      => 'system',
+                    'role' => 'system',
                 ];
 
                 $chat->conversation = json_encode($conversation);
@@ -51,25 +50,30 @@ EOT,
             }
 
             return $conversation;
-
         } catch (\Exception $e) {
             Log::error("DB getConversation error: " . $e->getMessage());
             return [];
         }
     }
 
+    /**
+     * حفظ المحادثة.
+     */
     public function saveConversation(string $sessionToken, array $messages): void
     {
         try {
             ChatSession::updateOrCreate(
                 ['session_token' => $sessionToken],
-                ['conversation'    => json_encode($messages)]
+                ['conversation' => json_encode($messages)]
             );
         } catch (\Exception $e) {
             Log::error("DB saveConversation error: " . $e->getMessage());
         }
     }
 
+    /**
+     * مسح المحادثة.
+     */
     public function clearConversation(string $sessionToken): void
     {
         try {
@@ -79,29 +83,32 @@ EOT,
         }
     }
 
+    /**
+     * استخراج بيانات الشكوى من المحادثة.
+     */
     public function extractComplaintData(array $conversation): array
     {
         $data = [
-            'user_id'               => Auth::id(),
-            'city_id'               => null,
-            'government_entity_id'  => null,
-            'description'           => null,
+            'user_id' => Auth::id(),
+            'city_id' => null,
+            'government_entity_id' => null,
+            'description' => null,
         ];
 
-        $cities   = City::all();
+        $cities = City::all();
         $entities = GovernmentEntity::all();
-        $descriptionCaptured = false;
+        $firstDesc = false;
 
         foreach ($conversation as $msg) {
-            if (! $msg['is_bot']) {
+            if (!$msg['is_bot']) {
                 $text = trim($msg['content']);
 
-                if (! $descriptionCaptured) {
+                if (!$firstDesc) {
                     $data['description'] = $text;
-                    $descriptionCaptured = true;
+                    $firstDesc = true;
                 }
 
-                if (! $data['city_id']) {
+                if (is_null($data['city_id'])) {
                     foreach ($cities as $city) {
                         if (mb_stripos($text, $city->name) !== false) {
                             $data['city_id'] = $city->id;
@@ -110,7 +117,7 @@ EOT,
                     }
                 }
 
-                if (! $data['government_entity_id']) {
+                if (is_null($data['government_entity_id'])) {
                     foreach ($entities as $entity) {
                         if (mb_stripos($text, $entity->name) !== false) {
                             $data['government_entity_id'] = $entity->id;

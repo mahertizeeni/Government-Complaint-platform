@@ -75,6 +75,7 @@ EOT
             $role = $msg['is_bot'] ? 'assistant' : 'user';
             $content = $msg['content'];
 
+            // تحقق إذا تم جمع المعلومات مسبقًا
             if (mb_strlen($content) > 40) {
                 $collected['تفاصيل الحادثة'] = true;
             }
@@ -90,7 +91,7 @@ EOT
             $messages[] = compact('role', 'content');
         }
 
-        // رسالة system توجيهية في النهاية
+        // رسالة system توجيهية في النهاية لتجنب إعادة السؤال
         $summary = "ملخص المعلومات التي تم جمعها:\n";
         foreach ($collected as $key => $value) {
             $summary .= "- $key: " . ($value ? '✓ موجود' : '✘ لم يُذكر بعد') . "\n";
