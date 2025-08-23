@@ -2,24 +2,14 @@
 
 
 return [
-
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
-
-    'allowed_methods' => ['*'],
-
-    'allowed_origins' => [
-        '*'   // السماح لأي دومين (خاصة للتجربة)
-    ],
-
-    'allowed_origins_patterns' => [],
-
-    'allowed_headers' => ['*'],   // السماح بكل الهيدرز
-
-    'exposed_headers' => [],
-
-    'max_age' => 0,
-
-    'supports_credentials' => true,   // ضروري إذا عم يستخدم sanctum أو cookies
+'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout'],
+'allowed_methods' => ['*'],
+'allowed_origins' => ['http://localhost:5173'],
+'allowed_origins_patterns' => [],
+'allowed_headers' => ['*'],
+'exposed_headers' => [],
+'max_age' => 0,
+'supports_credentials' => true,
 ];
 
 // return [
