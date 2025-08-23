@@ -1,35 +1,25 @@
 <?php
 
+
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Cross-Origin Resource Sharing (CORS) Configuration
-    |--------------------------------------------------------------------------
-    |
-    | هاد الملف بيحدد إعدادات الـ CORS لحتى تسمح للـ frontend (React) يتواصل
-    | مع الـ backend (Laravel + Sanctum) سواء من localhost أو من السيرفر.
-    |
-    */
-
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost:5173', // للـ React أثناء التطوير
-        'https://gov-complaints-platform.onrender.com', // نسخة الـ Production
+        '*'   // السماح لأي دومين (خاصة للتجربة)
     ],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['*'],   // السماح بكل الهيدرز
 
     'exposed_headers' => [],
 
     'max_age' => 0,
 
-    'supports_credentials' => true, // ضروري لـ Sanctum لأنه بيشتغل عبر الكوكيز
+    'supports_credentials' => true,   // ضروري إذا عم يستخدم sanctum أو cookies
 ];
 
 // return [
