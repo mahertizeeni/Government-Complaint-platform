@@ -16,7 +16,7 @@ class ComplaintResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'User_id' => $this->user_id,
+            'user_id' => $this->anonymous == 1 ? 'x' : $this->user_id,
             'government_entity_id' => $this->government_entity_id,
             'City_id' => $this->city_id,
             'attachments' => $this->attachments,

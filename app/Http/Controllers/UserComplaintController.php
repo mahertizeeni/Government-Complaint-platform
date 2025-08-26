@@ -48,9 +48,9 @@ public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analy
         $validated['attachments'] = "https://ucarecdn.com/{$uuid}/";
     }
 
-    // ✅ تحديد user_id بناءً على ما إذا كانت الشكوى مجهولة أو لا
     $validated['anonymous'] = (int) $validated['anonymous'];
-    $validated['user_id'] = $validated['anonymous'] === 1 ? null : Auth::id();
+    $validated['user_id'] = Auth::id();
+
 
     // ✅ إنشاء الشكوى
     $complaint = Complaint::create($validated);
