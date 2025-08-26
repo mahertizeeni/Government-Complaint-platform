@@ -16,45 +16,65 @@ class ComplaintChatService
     return !empty($data['description']) && !empty($data['government_entity_id']) && !empty($data['city_id']);
 }
 
-public function extractComplaintData(array $conversation): array
-{
-    $data = [
-        'user_id' => Auth::id(),
-        'description' => '',
-        'government_entity_id' => null,
-        'city_id' => null,
-    ];
+ public function extractComplaintData(array $conversation): array
+    {
+        $data = [
+            'user_id' => Auth::id(),
+            'description' => '',
+            'government_entity_id' => null,
+            'city_id' => null,
+        ];
 
-    foreach ($conversation as $message) {
-        if (!empty($message['is_bot'])) {
-            continue;
-        }
+        // كلمات أو عبارات لازم نتجاهلها (تحيات، افتتاحية)
+        $ignorePhrases = [
+            'مرحبا',
+            'السلام عليكم',
+            'هاي',
+            'اهلا',
+            'بدي قدم شكوى',
+            'ممكن اشتكي',
+            'تحية طيبة',
+        ];
 
-        $content = $message['content'];
-
-        if (empty($data['description'])) {
-            $data['description'] = $content;
-            continue;
-        }
-
-        if (!$data['government_entity_id']) {
-            $entity = \App\Models\GovernmentEntity::where('name', 'like', "%$content%")->first();
-            if ($entity) {
-                $data['government_entity_id'] = $entity->id;
+        foreach ($conversation as $message) {
+            if (!empty($message['is_bot'])) {
                 continue;
             }
-        }
 
-        if (!$data['city_id']) {
-            $city = \App\Models\City::where('name', 'like', "%$content%")->first();
-            if ($city) {
-                $data['city_id'] = $city->id;
+            $content = trim($message['content']);
+
+            // ✅ التحقق من الوصف
+            if (empty($data['description'])) {
+                if (
+                    mb_strlen($content) > 15 && // لازم النص يكون طويل كفاية
+                    !in_array(mb_strtolower($content), array_map('mb_strtolower', $ignorePhrases)) // مو من التحيات
+                ) {
+                    $data['description'] = $content;
+                    continue;
+                }
+            }
+
+            // ✅ التحقق من الجهة الحكومية
+            if (!$data['government_entity_id']) {
+                $entity = \App\Models\GovernmentEntity::where('name', 'like', "%$content%")->first();
+                if ($entity) {
+                    $data['government_entity_id'] = $entity->id;
+                    continue;
+                }
+            }
+
+            // ✅ التحقق من المدينة
+            if (!$data['city_id']) {
+                $city = \App\Models\City::where('name', 'like', "%$content%")->first();
+                if ($city) {
+                    $data['city_id'] = $city->id;
+                }
             }
         }
+
+        return $data;
     }
 
-    return $data;
-}
 
     public function getConversation(string $sessionToken): array
     {
