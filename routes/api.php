@@ -1,17 +1,12 @@
 <?php
 
-// use App\Http\Controllers\Api\AuthController;
-use App\Models\ContactUs;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\Sanctum;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ContactUsController;
-use App\Http\Controllers\SmartChatController;
-use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\UserComplaintController;
 use App\Http\Controllers\CyberComplaintController;
 use App\Http\Controllers\UserSuggestionController;
-use App\Http\Controllers\Api\ComplaintChatController;
 use App\Http\Controllers\ComplaintChatController as ControllersComplaintChatController;
 use App\Http\Controllers\employee\auth\AuthController;
 use App\Http\Controllers\EmployeeComplaintsController;
@@ -20,21 +15,19 @@ use App\Http\Controllers\EmployeeCyberComplaintsController;
 
 
 
-########## ChatBot  Endpoint
-
-Route::post('/chatai', [ControllersComplaintChatController::class, 'handleChat'])->middleware('auth:sanctum');
-
-
-
 
 ######### ContactUs Endpoint
 Route::post('/contactus',[ContactUsController::class, '__invoke']);
+
 ######### Complaint Recource Endpoint
 Route::apiResource('User-Complaints',UserComplaintController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum');
-######### CyberComplaint Endpoint
-// Route::post('/cybercomplaint',[CyberComplaintController::class,'store']);
+
+########## ChatBot  Endpoint
+Route::post('/chatai', [ControllersComplaintChatController::class, 'handleChat'])->middleware('auth:sanctum');
+########## CyberCompaint Recource Endpoint
 Route::apiResource('User-CyberComplaint',CyberComplaintController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum');
 
+########## Suggestion Recource Endpoint
 Route::apiResource('Suggestions',UserSuggestionController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum');
 
 ######## Employee account

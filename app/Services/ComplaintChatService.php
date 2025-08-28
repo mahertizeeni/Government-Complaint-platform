@@ -43,10 +43,10 @@ class ComplaintChatService
 
             $content = trim($message['content']);
 
-            // ✅ التحقق من الوصف
+            //  التحقق من الوصف
             if (empty($data['description'])) {
                 if (
-                    mb_strlen($content) > 15 && // لازم النص يكون طويل كفاية
+                    mb_strlen($content) > 15 && // 'الوصف غير قصير
                     !in_array(mb_strtolower($content), array_map('mb_strtolower', $ignorePhrases)) // مو من التحيات
                 ) {
                     $data['description'] = $content;
@@ -54,18 +54,18 @@ class ComplaintChatService
                 }
             }
 
-            // ✅ التحقق من الجهة الحكومية
+            //  التحقق من الجهة الحكومية
             if (!$data['government_entity_id']) {
-                $entity = \App\Models\GovernmentEntity::where('name', 'like', "%$content%")->first();
+                $entity = GovernmentEntity::where('name', 'like', "%$content%")->first();
                 if ($entity) {
                     $data['government_entity_id'] = $entity->id;
                     continue;
                 }
             }
 
-            // ✅ التحقق من المدينة
+            //  التحقق من المدينة
             if (!$data['city_id']) {
-                $city = \App\Models\City::where('name', 'like', "%$content%")->first();
+                $city = City::where('name', 'like', "%$content%")->first();
                 if ($city) {
                     $data['city_id'] = $city->id;
                 }
@@ -140,52 +140,4 @@ EOT,
             Log::error("DB clearConversation error: " . $e->getMessage());
         }
     }
-
-    /**
-     * استخراج بيانات الشكوى من المحادثة.
-     */
-    // public function extractComplaintData(array $conversation): array
-    // {
-    //     $data = [
-    //         'user_id' => Auth::id(),
-    //         'city_id' => null,
-    //         'government_entity_id' => null,
-    //         'description' => null,
-    //     ];
-
-    //     $cities = City::all();
-    //     $entities = GovernmentEntity::all();
-    //     $firstDesc = false;
-
-    //     foreach ($conversation as $msg) {
-    //         if (!$msg['is_bot']) {
-    //             $text = trim($msg['content']);
-
-    //             if (!$firstDesc) {
-    //                 $data['description'] = $text;
-    //                 $firstDesc = true;
-    //             }
-
-    //             if (is_null($data['city_id'])) {
-    //                 foreach ($cities as $city) {
-    //                     if (mb_stripos($text, $city->name) !== false) {
-    //                         $data['city_id'] = $city->id;
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-
-    //             if (is_null($data['government_entity_id'])) {
-    //                 foreach ($entities as $entity) {
-    //                     if (mb_stripos($text, $entity->name) !== false) {
-    //                         $data['government_entity_id'] = $entity->id;
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     return $data;
-    // }
 }

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('description');
             $table->enum('is_emergency', ['1', '2', '3'])->default('1');
             $table->boolean('anonymous')->default(false);
-            $table->string('status')->default('pending');
+            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
             $table->text('map_iframe')->nullable();
             $table->timestamps();
 
