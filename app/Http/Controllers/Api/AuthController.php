@@ -53,8 +53,8 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'national_id' => Crypt::encryptString($request->national_id), // للاستخدام والاطّلاع
-            'national_id_hash' => Hash::make($request->national_id), // للبحث والمقارنة
+            'national_id' => Crypt::encryptString($request->national_id), 
+            'national_id_hash' => Hash::make($request->national_id),
             'password' => Hash::make($request->password),
         ]);
         $data['token'] = $user->createToken('ComplaintGoverment')->plainTextToken;
@@ -118,8 +118,10 @@ public function login(Request $request)
     if ($request->email) {
         $user = User::where('email', $request->email)->first();
     } elseif ($request->national_id) {
-        $hash = hash('sha256', $request->national_id);
-        $user = User::where('national_id_hash', $hash)->first();
+        // هنا وضعنا التعديل
+        $user = User::all()->first(function($u) use ($request) {
+            return Hash::check($request->national_id, $u->national_id_hash);
+        });
     }
 
     if ($user && Hash::check($request->password, $user->password)) {
@@ -132,6 +134,7 @@ public function login(Request $request)
 
     return ApiResponse::sendResponse(401, 'These credentials don\'t exist', null);
 }
+
 
 public function logout(Request $request)
 {
