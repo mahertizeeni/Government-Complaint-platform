@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Support\Facades\Password;
 use Illuminate\Foundation\Http\FormRequest;
 
 class EmployeeRegisterRequest extends FormRequest
@@ -24,7 +25,13 @@ class EmployeeRegisterRequest extends FormRequest
         return [
              'name' => ['required', 'string'],
             'email' => ['required', 'email', 'unique:employees,email'],
-            'password' => ['required', 'confirmed','min:8'],
+            'password' => ['required', 'confirmed',
+          Password::min(8)       // الطول الأدنى 8
+            ->letters()       // لازم يحتوي أحرف
+            ->mixedCase()     // لازم يحتوي حرف كبير وصغير
+            ->numbers()       // لازم يحتوي أرقام
+            ->symbols(),      // لازم يحتوي رموز
+        ],
             'government_entity' => ['required'],
             'city'=>['required'],
         ];

@@ -8,6 +8,7 @@ use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Mail\ResetPasswordMail;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Crypt;
 use App\Http\Controllers\Controller;
 use App\Models\Password_Reset_Token;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +29,13 @@ class AuthController extends Controller
         [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:' . User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed',
+         'confirmed',
+        Password::min(8)       // الطول الأدنى 8
+            ->letters()       // لازم يحتوي أحرف
+            ->mixedCase()     // لازم يحتوي حرف كبير وصغير
+            ->numbers()       // لازم يحتوي أرقام        
+            ],
             'national_id' => ['required', 'string', 'max:20','regex:/^06010/', 'unique:' . User::class],
         ],[],
          [
@@ -46,7 +53,8 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'national_id' => $request->national_id,
+            'national_id' => Crypt::encryptString($request->national_id), // للاستخدام والاطّلاع
+            'national_id_hash' => Hash::make($request->national_id), // للبحث والمقارنة
             'password' => Hash::make($request->password),
         ]);
         $data['token'] = $user->createToken('ComplaintGoverment')->plainTextToken;
@@ -111,9 +119,14 @@ class AuthController extends Controller
 
     if ($request->email) {
         $user = User::where('email', $request->email)->first();
-    } elseif ($request->national_id) {
-        $user = User::where('national_id', $request->national_id)->first();
-    }
+} elseif ($request->national_id) {
+    
+    $users = User::whereNotNull('national_id_hash')->get();
+    $user = $users->first(function ($u) use ($request) {
+        return Hash::check($request->national_id, $u->national_id_hash);
+    });
+}
+
 
     if ($user && Hash::check($request->password, $user->password)) {
         $data['token'] = $user->createToken('MyAuthApp')->plainTextToken;
