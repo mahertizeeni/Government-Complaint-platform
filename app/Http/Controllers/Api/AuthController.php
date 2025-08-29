@@ -97,12 +97,11 @@ class AuthController extends Controller
 
     } */
 
-
-    public function login(Request $request)
+public function login(Request $request)
 {
     $validator = Validator::make($request->all(), [
-        'email' => ['nullable', 'string', 'email','required_without:national_id'], // حقل البريد الإلكتروني
-        'national_id' => ['nullable', 'string','required_without:email'], // حقل الرقم الوطني
+        'email' => ['nullable', 'string', 'email','required_without:national_id'],
+        'national_id' => ['nullable', 'string','required_without:email'],
         'password' => ['required'],
     ], [], [
         'email' => __('lang.email'),
@@ -114,30 +113,26 @@ class AuthController extends Controller
         return ApiResponse::sendResponse(422, 'Login Validation Errors', $validator->errors());
     }
 
-    // البحث عن المستخدم باستخدام البريد الإلكتروني أو الرقم الوطني
     $user = null;
 
     if ($request->email) {
         $user = User::where('email', $request->email)->first();
-} elseif ($request->national_id) {
-    
-    $users = User::whereNotNull('national_id_hash')->get();
-    $user = $users->first(function ($u) use ($request) {
-        return Hash::check($request->national_id, $u->national_id_hash);
-    });
-}
-
+    } elseif ($request->national_id) {
+        $hash = hash('sha256', $request->national_id);
+        $user = User::where('national_id_hash', $hash)->first();
+    }
 
     if ($user && Hash::check($request->password, $user->password)) {
         $data['token'] = $user->createToken('MyAuthApp')->plainTextToken;
         $data['name'] = $user->name;
         $data['email'] = $user->email;
-        $data['national_id'] = $user->national_id;
+        $data['national_id'] = Crypt::decryptString($user->national_id);
         return ApiResponse::sendResponse(200, 'Login Successfully', $data);
     }
 
     return ApiResponse::sendResponse(401, 'These credentials don\'t exist', null);
 }
+
 public function logout(Request $request)
 {
     $request->user()->currentAccessToken()->delete();
@@ -180,7 +175,7 @@ public function logout(Request $request)
         $validator = Validator::make($request->all(), [
             'email' => ['required', 'email'],
             'token' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'], // يجب أن ترسل أيضًا password_confirmation
+            'password' => ['required', 'string', 'min:8', 'confirmed'], // يجب أن ترسل أيضًا password_confirmation
         ]);
 
         if ($validator->fails()) {
