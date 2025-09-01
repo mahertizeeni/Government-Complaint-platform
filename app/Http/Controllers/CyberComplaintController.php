@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\CyberComplaint;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Http\Resources\CyberComplaintResource;
 use App\Http\Requests\StoreCyberComplaintRequest;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 
 class CyberComplaintController extends Controller

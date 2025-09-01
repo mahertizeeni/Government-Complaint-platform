@@ -5,7 +5,7 @@ use App\Http\Middleware\IsAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\SuggestionController;
+use App\Http\Controllers\UserSuggestionController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\UserComplaintController;
@@ -36,7 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 //=============Suggestion Api
-Route::middleware('auth:sanctum')->prefix('Suggestion')->controller(SuggestionController::class)->group(function()
+Route::middleware('auth:sanctum')->prefix('Suggestion')->controller(UserSuggestionController::class)->group(function()
 {
     Route::get('/','index');
     Route::post('/','store');
@@ -61,10 +61,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', IsAdmin::class])->group(func
     Route::put('/employees/{employee}', [EmployeeController::class, 'update']);
     Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
 
-    // Route::apiResource('user-suggestions',SuggestionController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum') ;
+    // Route::apiResource('user-suggestions',UserSuggestionController::class)->only('index', 'store', 'show', 'destroy')->middleware('auth:sanctum') ;
 
-    // Route::get('/suggestions/{id}', [SuggestionController::class, 'show']);
-    // Route::delete('/suggestions/{suggestion}', [SuggestionController::class, 'destroy']);
+    // Route::get('/suggestions/{id}', [UserSuggestionController::class, 'show']);
+    // Route::delete('/suggestions/{suggestion}', [UserSuggestionController::class, 'destroy']);
 
     Route::get('/dashboard/users', [UserController::class, 'index']);
     Route::get('/users/{id}', [UserController::class, 'show']);

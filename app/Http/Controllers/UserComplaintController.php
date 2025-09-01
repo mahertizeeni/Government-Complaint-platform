@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Http;
 use App\Services\AiComplaintAnalyzer;
 use App\Http\Resources\ComplaintResource;
 use App\Http\Requests\StoreComplaintRequest;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class UserComplaintController extends Controller
 {
@@ -33,7 +32,7 @@ public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analy
 {
     $validated = $request->validated();
 
-    // ✅ رفع المرفقات إلى UploadCare
+    //  رفع المرفقات إلى UploadCare
     if ($request->hasFile('attachments')) {
         $file = $request->file('attachments');
 
@@ -52,10 +51,10 @@ public function store(StoreComplaintRequest $request, AiComplaintAnalyzer $analy
     $validated['user_id'] = Auth::id();
 
 
-    // ✅ إنشاء الشكوى
+    //  إنشاء الشكوى
     $complaint = Complaint::create($validated);
 
-    // ✅ تقييم الذكاء الاصطناعي
+    //  تقييم الذكاء الاصطناعي
     $aiRating = $analyzer->rateEmergencyLevel($complaint->description);
     $complaint->is_emergency = in_array($aiRating, [1, 2, 3]) ? $aiRating : 1;
     $complaint->save();

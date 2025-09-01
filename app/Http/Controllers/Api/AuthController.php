@@ -28,7 +28,7 @@ class AuthController extends Controller
         [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:' . User::class],
-            'password' => ['required', 'confirmed',
+            'password' => ['required',
          'confirmed',
         Password::min(8)       // الطول الأدنى 8
             ->letters()       // لازم يحتوي أحرف

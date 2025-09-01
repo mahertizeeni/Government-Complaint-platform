@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Admin;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use App\Helpers\ApiResponse;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Validator;
 
 class AdminAuthController extends Controller
 {
@@ -16,7 +17,7 @@ class AdminAuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email'    => 'required|email',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:8',
         ]);
 
         if ($validator->fails()) {
@@ -42,7 +43,12 @@ class AdminAuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:admins,email',
-            'password' => 'required|confirmed|min:6',
+            'password' => 'required|confirmed|min:8',
+             Password::min(8)       // الطول الأدنى 8
+            ->letters()       // لازم يحتوي أحرف
+            ->mixedCase()     // لازم يحتوي حرف كبير وصغير
+            ->numbers()       // لازم يحتوي أرقام        
+            
         ]);
 
         if ($validator->fails()) {

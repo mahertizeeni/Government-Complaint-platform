@@ -15,7 +15,7 @@ class EmployeeSuggestionController extends Controller
      public function getSuggestions(Request $request)
  {
      $this->authorize('viewAny',Suggestion::class);
-        $employee = Auth::user();
+    $employee = Auth::user();
     $suggestions = Suggestion::where('government_entity_id',$employee->government_entity_id)
     ->where('city_id',$employee->city_id)
     ->get() ;

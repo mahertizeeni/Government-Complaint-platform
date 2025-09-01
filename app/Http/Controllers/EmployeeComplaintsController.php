@@ -47,7 +47,6 @@ class EmployeeComplaintsController extends Controller
 
   public function show($id)
 {
-   $this->authorize('update',Complaint::class);
 
     $employee = Auth::user();
 
@@ -66,6 +65,7 @@ class EmployeeComplaintsController extends Controller
 
 public function updateStatus(Request $request, $id)
 {
+    $this->authorize('update',Complaint::class);
     $request->validate([
         'status' => 'required|in:pending,accepted,rejected',
     ]);

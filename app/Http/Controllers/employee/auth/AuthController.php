@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\employee\auth;
 
-use id;
+
 use App\Models\Employee;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
