@@ -15,12 +15,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\NewRegisterRequest;
-use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
-use App\Models\PasswordReset as ModelsPasswordReset;
-use App\Models\Password_reset_token as ModelsPassword_reset_token;
 use App\Models\PasswordResetToken;
+
 
 class AuthController extends Controller
 {
