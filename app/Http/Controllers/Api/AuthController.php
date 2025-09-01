@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use App\Models\PasswordReset as ModelsPasswordReset;
 use App\Models\Password_reset_token as ModelsPassword_reset_token;
+use App\Models\PasswordResetToken;
 
 class AuthController extends Controller
 {
@@ -67,35 +68,7 @@ class AuthController extends Controller
         return ApiResponse::sendResponse(201, 'User Account Created Successfully', $data);
     }
 
-/*     public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'identifier' => ['required', 'string'],
-            'password' => ['required'],
-        ], [], [
-            'email' => __('lang.email'),
-            'password' => __('lang.password'),
-        ]);
 
-        if ($validator->fails()) {
-            return ApiResponse::sendResponse(422, 'Login Validation Errors', $validator->errors());
-        }
-
-
-    $user = User::where('email', $request->identifier)// محاولة تسجيل الدخول باستخدام البريد الإلكتروني أو الرقم الوطني
-    ->orWhere('national_id', $request->identifier)
-    ->first();
-
-    if ($user && Hash::check($request->password, $user->password)) {
-    $data['token'] = $user->createToken('MyAuthApp')->plainTextToken;
-    $data['name'] = $user->name;
-    $data['email'] = $user->email;
-    $data['national_id'] = $user->national_id;
-    return ApiResponse::sendResponse(200, 'Login Successfully', $data);
-    }
-           return ApiResponse::sendResponse(401, 'These credentials doesn\'t exist', null);
-
-    } */
 
 public function login(Request $request)
 {
@@ -141,8 +114,9 @@ public function logout(Request $request)
     $request->user()->currentAccessToken()->delete();
     return ApiResponse::sendResponse(200,'LOgout succsesfully', null);
 }
- public function sendResetLink(Request $request)
-{
+
+    public function sendResetLink(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'identifier' => ['required', 'string'], // email أو national_id
         ]);
@@ -151,6 +125,7 @@ public function logout(Request $request)
             return ApiResponse::sendResponse(422, 'Validation error', $validator->errors());
         }
 
+        // البحث عن المستخدم بالإيميل أو national_id
         $user = User::where('email', $request->identifier)
                     ->orWhere('national_id', $request->identifier)
                     ->first();
@@ -161,31 +136,32 @@ public function logout(Request $request)
 
         $code = strtoupper(Str::random(6));
 
-        Password_Reset_Token::where('email', $user->email)->delete(); // حذف الرموز السابقة
+        // إنشاء أو تحديث رمز الاستعادة
+        PasswordResetToken::updateOrCreate(
+            ['email' => $user->email],
+            ['token' => $code, 'created_at' => now()]
+        );
 
-        Password_Reset_Token::create([
-            'email' => $user->email,
-            'token' => $code,
-            'created_at' => now(),
-        ]);
-
+        // إرسال الكود عبر البريد
         Mail::to($user->email)->send(new ResetPasswordMail($code));
 
         return ApiResponse::sendResponse(200, 'Reset code sent to your email');
-}
+    }
+
     public function resetPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => ['required', 'email'],
             'token' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'], // يجب أن ترسل أيضًا password_confirmation
+            'password' => ['required', 'string', 'min:8', 'confirmed'], 
         ]);
 
         if ($validator->fails()) {
             return ApiResponse::sendResponse(422, 'Validation error', $validator->errors());
         }
 
-        $reset = Password_Reset_Token::where('email', $request->email)
+        // التحقق من الكود
+        $reset = PasswordResetToken::where('email', $request->email)
                     ->where('token', $request->token)
                     ->first();
 
@@ -193,21 +169,24 @@ public function logout(Request $request)
             return ApiResponse::sendResponse(401, "Invalid or expired token", null);
         }
 
+        // التحقق من مدة صلاحية الكود (15 دقيقة)
         if (now()->diffInMinutes($reset->created_at) > 15) {
             return ApiResponse::sendResponse(401, "Token expired", null);
         }
 
+        // البحث عن المستخدم
         $user = User::where('email', $request->email)->first();
         if (!$user) {
             return ApiResponse::sendResponse(404, "User not found", null);
         }
 
+        // تحديث كلمة المرور
         $user->password = Hash::make($request->password);
         $user->save();
 
+        // حذف الكود بعد الاستخدام
         $reset->delete();
 
         return ApiResponse::sendResponse(200, "Password has been reset successfully");
     }
-
 }

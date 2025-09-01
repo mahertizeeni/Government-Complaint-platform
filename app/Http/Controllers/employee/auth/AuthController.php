@@ -13,7 +13,6 @@ use App\Http\Requests\EmployeeRegisterRequest;
 use App\Models\City;
 use Illuminate\Support\Facades\Hash;
 
-use function Laravel\Prompts\error;
 
 class AuthController extends Controller
 {

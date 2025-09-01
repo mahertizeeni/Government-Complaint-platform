@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Password_reset_token extends Model
+class PasswordResetToken extends Model
 {
     protected $table = 'password_reset_tokens';
 
@@ -12,7 +12,7 @@ class Password_reset_token extends Model
 
     public $timestamps = false;
 
-    public $incrementing = false;
-    protected $primaryKey = 'email';
-    protected $keyType = 'string';
+    protected $casts = [
+        'created_at' => 'datetime',
+    ];
 }

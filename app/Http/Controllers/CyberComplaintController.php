@@ -49,7 +49,7 @@ public function store(StoreCyberComplaintRequest $request)
             'UPLOADCARE_STORE' => '1',
         ]);
 
-        $uuid = $response['file']; // هذا هو الـ UUID يلي بنستخدمه لاحقًا
+        $uuid = $response['file'];
         $data['evidence_file'] = "https://ucarecdn.com/{$uuid}/";
     }
 
