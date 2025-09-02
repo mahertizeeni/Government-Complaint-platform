@@ -22,21 +22,22 @@ class ComplaintChatController extends Controller
         $this->analyzer = $analyzer;
     }
 
-public function handleChat(Request $request)
+  public function handleChat(Request $request)
 {
     $sessionToken = $request->input('session_token');
-    $userMessage = $request->input('message');
+    $userMessage = trim((string) $request->input('message'));
 
-    if (!$userMessage) {
-        return response()->json(['error' => 'الرسالة مطلوبة'], 400);
+    // الرسالة مطلوبة دائمًا
+    if ($userMessage === '') {
+        return response()->json(['error' => 'الرسالة مطلوبة'], 422);
     }
 
-    // إذا ما في session_token من الفرونت -> أنشئ واحد جديد
-    if (!$sessionToken) {
+    // إذا ما وصل session_token من الفرونت -> أنشئ واحد جديد وأستمر بنفس المنطق
+    if (empty($sessionToken)) {
         $sessionToken = (string) \Illuminate\Support\Str::uuid();
     }
 
-    // استرجاع المحادثة من الداتابيز
+    // استرجاع/إنشاء المحادثة من الداتابيز
     $conversation = $this->chatService->getConversation($sessionToken);
 
     // أضف رسالة المستخدم
@@ -56,7 +57,7 @@ public function handleChat(Request $request)
             $this->chatService->clearConversation($sessionToken);
 
             return response()->json([
-                'session_token' => $sessionToken,
+                'session_token' => $sessionToken, // رجّع التوكن للفرونت
                 'response' => "تم استلام شكواك بنجاح، وشكرًا لتواصلك معنا."
             ]);
         } catch (\Exception $e) {
@@ -80,13 +81,14 @@ public function handleChat(Request $request)
         'timestamp' => now()->toIso8601String(),
     ];
 
-    // حفظ المحادثة
+    // حفظ المحادثة (مهم علشان ما ينسى السياق)
     $this->chatService->saveConversation($sessionToken, $conversation);
 
-    // إرجاع الرد مع session_token
+    // إرجاع الرد مع session_token دائماً
     return response()->json([
         'session_token' => $sessionToken,
         'response' => $botResponse
     ]);
 }
+
 }
