@@ -22,22 +22,22 @@ class ComplaintChatController extends Controller
         $this->analyzer = $analyzer;
     }
 
-  public function handleChat(Request $request)
+public function handleChat(Request $request)
 {
     $sessionToken = $request->input('session_token');
     $userMessage = trim((string) $request->input('message'));
 
-    // الرسالة مطلوبة دائمًا
     if ($userMessage === '') {
         return response()->json(['error' => 'الرسالة مطلوبة'], 422);
     }
 
-    // إذا ما وصل session_token من الفرونت -> أنشئ واحد جديد وأستمر بنفس المنطق
+    // إذا ما في session_token -> أنشئ واحد جديد
     if (empty($sessionToken)) {
         $sessionToken = (string) \Illuminate\Support\Str::uuid();
+        Log::info("Generated new chat session", ['session' => $sessionToken]);
     }
 
-    // استرجاع/إنشاء المحادثة من الداتابيز
+    // استرجاع/إنشاء المحادثة
     $conversation = $this->chatService->getConversation($sessionToken);
 
     // أضف رسالة المستخدم
@@ -46,6 +46,10 @@ class ComplaintChatController extends Controller
         'is_bot' => false,
         'timestamp' => now()->toIso8601String(),
     ];
+
+    // حفظ المحادثة فورًا حتى لا نضيّع السياق
+    $this->chatService->saveConversation($sessionToken, $conversation);
+    Log::info("Saved conversation after user message", ['session' => $sessionToken, 'count' => count($conversation)]);
 
     // تحقق من الاكتمال
     if ($this->chatService->isConversationComplete($conversation)) {
@@ -57,7 +61,7 @@ class ComplaintChatController extends Controller
             $this->chatService->clearConversation($sessionToken);
 
             return response()->json([
-                'session_token' => $sessionToken, // رجّع التوكن للفرونت
+                'session_token' => $sessionToken,
                 'response' => "تم استلام شكواك بنجاح، وشكرًا لتواصلك معنا."
             ]);
         } catch (\Exception $e) {
@@ -66,7 +70,7 @@ class ComplaintChatController extends Controller
         }
     }
 
-    // توليد رد تلقائي من الذكاء الاصطناعي
+    // الآن مرّر المحادثة الكاملة للـ LLM
     try {
         $botResponse = $this->groqService->generateResponse($conversation);
     } catch (\Exception $e) {
@@ -74,21 +78,21 @@ class ComplaintChatController extends Controller
         return response()->json(['error' => 'فشل في توليد الرد من الخدمة الخارجية.'], 500);
     }
 
-    // أضف رد الذكاء الاصطناعي للمحادثة
+    // أضف رد الذكاء الاصطناعي للمحادثة وحفظ نهائي
     $conversation[] = [
         'content' => $botResponse,
         'is_bot' => true,
         'timestamp' => now()->toIso8601String(),
     ];
-
-    // حفظ المحادثة (مهم علشان ما ينسى السياق)
     $this->chatService->saveConversation($sessionToken, $conversation);
+    Log::info("Saved conversation after bot response", ['session' => $sessionToken, 'count' => count($conversation)]);
 
-    // إرجاع الرد مع session_token دائماً
+    // إرجاع الرد مع التوكن دائماً
     return response()->json([
         'session_token' => $sessionToken,
         'response' => $botResponse
     ]);
 }
+
 
 }
