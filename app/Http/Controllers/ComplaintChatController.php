@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Complaint;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Services\GroqService;
-use Illuminate\Support\Facades\Log;
 use App\Services\AiComplaintAnalyzer;
+use App\Models\Complaint;
+use Illuminate\Support\Facades\Log;
+use App\Services\GroqService;
 use App\Services\ComplaintChatService;
 
 class ComplaintChatController extends Controller
@@ -23,22 +22,21 @@ class ComplaintChatController extends Controller
         $this->analyzer = $analyzer;
     }
 
-   public function handleChat(Request $request)
+public function handleChat(Request $request)
 {
-    $userMessage = trim((string) $request->input('message'));
-    if ($userMessage === '') {
-        return response()->json(['error' => 'الرسالة مطلوبة'], 422);
-    }
-
-    // إذا ما وصل توكن من الفرونت → أنشئ واحد
     $sessionToken = $request->input('session_token');
-    if (empty($sessionToken)) {
-        // ممكن تستخدم UUID أو random_bytes، الاثنين مناسبين
-        $sessionToken = (string) Str::uuid(); // مثال: "8c4d...-..."
-        // أو: $sessionToken = bin2hex(random_bytes(16)); // "f3ab9c..."
+    $userMessage = $request->input('message');
+
+    if (!$userMessage) {
+        return response()->json(['error' => 'الرسالة مطلوبة'], 400);
     }
 
-    // استرجاع/إنشاء المحادثة
+    // إذا ما في session_token من الفرونت -> أنشئ واحد جديد
+    if (!$sessionToken) {
+        $sessionToken = (string) \Illuminate\Support\Str::uuid();
+    }
+
+    // استرجاع المحادثة من الداتابيز
     $conversation = $this->chatService->getConversation($sessionToken);
 
     // أضف رسالة المستخدم
@@ -58,7 +56,7 @@ class ComplaintChatController extends Controller
             $this->chatService->clearConversation($sessionToken);
 
             return response()->json([
-                'session_token' => $sessionToken, // رجّع التوكن دائمًا
+                'session_token' => $sessionToken,
                 'response' => "تم استلام شكواك بنجاح، وشكرًا لتواصلك معنا."
             ]);
         } catch (\Exception $e) {
@@ -67,7 +65,7 @@ class ComplaintChatController extends Controller
         }
     }
 
-    // توليد رد الذكاء الاصطناعي
+    // توليد رد تلقائي من الذكاء الاصطناعي
     try {
         $botResponse = $this->groqService->generateResponse($conversation);
     } catch (\Exception $e) {
@@ -75,16 +73,20 @@ class ComplaintChatController extends Controller
         return response()->json(['error' => 'فشل في توليد الرد من الخدمة الخارجية.'], 500);
     }
 
-    // أضف رد البوت واحفظ
+    // أضف رد الذكاء الاصطناعي للمحادثة
     $conversation[] = [
         'content' => $botResponse,
         'is_bot' => true,
         'timestamp' => now()->toIso8601String(),
     ];
+
+    // حفظ المحادثة
     $this->chatService->saveConversation($sessionToken, $conversation);
 
+    // إرجاع الرد مع session_token
     return response()->json([
-        'session_token' => $sessionToken, // مهم: دايمًا رجّعه
+        'session_token' => $sessionToken,
         'response' => $botResponse
-    ]);}
+    ]);
+}
 }

@@ -77,18 +77,19 @@ class ComplaintChatService
 
 
     public function getConversation(string $sessionToken): array
-{
-    try {
-        $chat = ChatSession::firstOrCreate(
-            ['session_token' => $sessionToken],
-            ['conversation' => null, 'user_id' => Auth::id()]
-        );
+    {
+        try {
+            $chat = ChatSession::firstOrCreate(
+                ['session_token' => $sessionToken],
+                ['conversation' => null]
+            );
 
-        $conversation = $chat->conversation ? json_decode($chat->conversation, true) : [];
+            $conversation = $chat->conversation ? json_decode($chat->conversation, true) : [];
 
-        if (empty($conversation)) {
-            $conversation[] = [
-                'content' => <<<'EOT'
+            // إذا المحادثة فارغة أضف رسالة system تمهيدية
+            if (empty($conversation)) {
+                $conversation[] = [
+                    'content' => <<<'EOT'
 أنت مساعد ذكي تتحدث فقط باللغة العربية الفصحى.
 
 مهمتك هي مساعدة المواطن على تقديم شكوى عبر جمع المعلومات التالية:
@@ -97,41 +98,39 @@ class ComplaintChatService
 3. المدينة التي حدثت فيها المشكلة
 
 ✅ بعد أن يرسل المستخدم وصف المشكلة، أظهر تعليقًا تعاطفيًا صغيرًا يعكس فهمك للوضع، ثم تابع بالسؤال التالي.
+
 ❌ لا تطلب بريدًا إلكترونيًا أو رقم هاتف  
 ✅ لا تكرر الأسئلة التي تمّت الإجابة عليها  
 ✅ تابع من حيث توقفت فقط  
 ✅ لا تخرج عن السياق الرسمي والمفيد
 EOT,
-                'is_bot' => true,
-                'timestamp' => now()->toIso8601String(),
-                'role' => 'system',
-            ];
+                    'is_bot' => true,
+                    'timestamp' => now()->toIso8601String(),
+                    'role' => 'system',
+                ];
 
-            $chat->conversation = json_encode($conversation, JSON_UNESCAPED_UNICODE);
-            $chat->save();
+                $chat->conversation = json_encode($conversation);
+                $chat->save();
+            }
+
+            return $conversation;
+        } catch (\Exception $e) {
+            Log::error("DB getConversation error: " . $e->getMessage());
+            return [];
         }
-
-        return $conversation;
-    } catch (\Exception $e) {
-        Log::error("DB getConversation error: " . $e->getMessage());
-        return [];
     }
-}
 
-public function saveConversation(string $sessionToken, array $messages): void
-{
-    try {
-        ChatSession::updateOrCreate(
-            ['session_token' => $sessionToken],
-            [
-                'user_id' => Auth::id(),
-                'conversation' => json_encode($messages, JSON_UNESCAPED_UNICODE)
-            ]
-        );
-    } catch (\Exception $e) {
-        Log::error("DB saveConversation error: " . $e->getMessage());
+    public function saveConversation(string $sessionToken, array $messages): void
+    {
+        try {
+            ChatSession::updateOrCreate(
+                ['session_token' => $sessionToken],
+                ['conversation' => json_encode($messages)]
+            );
+        } catch (\Exception $e) {
+            Log::error("DB saveConversation error: " . $e->getMessage());
+        }
     }
-}
 
     public function clearConversation(string $sessionToken): void
     {
