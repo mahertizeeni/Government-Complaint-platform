@@ -25,6 +25,7 @@ class ComplaintResource extends JsonResource
             'status' => $this->status,
             'anonymous'=>$this->anonymous,
             'map_iframe' => $this->map_iframe,
+            'created_at'=>$this->created_at,
         ];
     }
 }

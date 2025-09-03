@@ -22,6 +22,8 @@ class CyberComplaintResource extends JsonResource
             'Description' => $this->description,
             'related_link' => $this->related_link,
             'status' => $this->status,
+            'created_at'=>$this->created_at,
+
             
         ];
     }
