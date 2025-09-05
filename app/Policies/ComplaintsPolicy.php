@@ -35,7 +35,7 @@ class ComplaintsPolicy
            
         }
         if($user instanceof Admin){
-            return $complaint->get() ;
+            return true ;
            
         }
         return false ;

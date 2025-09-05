@@ -74,6 +74,8 @@ public function updateStatus(Request $request, $id)
     if (!$complaint) {
         return ApiResponse::sendResponse(404, 'Not Found', []);
     }
+    $this->authorize('update', $complaint);
+
 
     $complaint->status = $request->status;
     $complaint->save();
