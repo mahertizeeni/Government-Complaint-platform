@@ -41,7 +41,6 @@ public function getComplaints(Request $request)
 }
 public function updateStatus(Request $request , $id)
 {
-     $this->authorize('update',CyberComplaint::class);
  $request->validate(([
   'status'=>'required|in:pending,accepted,rejected',
     ]));
