@@ -68,8 +68,8 @@ class AuthController extends Controller
 
 
 
-public function login(Request $request)
-{
+    public function login(Request $request)
+    {
     $validator = Validator::make($request->all(), [
         'email' => ['nullable', 'string', 'email','required_without:national_id'],
         'national_id' => ['nullable', 'string','required_without:email'],
@@ -89,7 +89,6 @@ public function login(Request $request)
     if ($request->email) {
         $user = User::where('email', $request->email)->first();
     } elseif ($request->national_id) {
-        // هنا وضعنا التعديل
         $user = User::all()->first(function($u) use ($request) {
             return Hash::check($request->national_id, $u->national_id_hash);
         });
@@ -104,14 +103,14 @@ public function login(Request $request)
     }
 
     return ApiResponse::sendResponse(401, 'These credentials don\'t exist', null);
-}
+    }
 
 
-public function logout(Request $request)
-{
+    public function logout(Request $request)
+    {
     $request->user()->currentAccessToken()->delete();
     return ApiResponse::sendResponse(200,'LOgout succsesfully', null);
-}
+    }
 
     public function sendResetLink(Request $request)
     {
