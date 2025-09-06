@@ -20,6 +20,7 @@ class SuggestionResource extends JsonResource
         'description' => $this->description,
         'user_id' => $this->user_id,
         'government_entity_id' => $this->government_entity_id,
+       'government_entity'=> $this->governmentEntity?->name, 
         'city_id' => $this->city_id,
         'created_at' => $this->created_at,
     ];
