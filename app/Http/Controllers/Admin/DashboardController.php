@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\CyberComplaint;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ComplaintResource;
+use App\Http\Resources\CyberComplaintResource;
 use App\Http\Resources\SuggestionResource;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -100,4 +101,15 @@ public function complaints(Request $request)
         new SuggestionResource($suggestion)
     );
 }
+    public function cybercomplaint()
+    {  $this->authorize('viewAny',CyberComplaint::class);
+        $cybercomplaint = CyberComplaint::all();
+
+        return ApiResponse::sendResponse(
+            200,
+            'cybercomplaint retrieved successfully.',
+            CyberComplaintResource::collection($cybercomplaint)
+        );
+    }
+   
 }

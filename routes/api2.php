@@ -53,6 +53,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', IsAdmin::class])->group(func
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/dashboard/suggestions', [DashboardController::class, 'suggestions'])->name('admin.dashboard.suggestions');
     Route::get('/dashboard/complaints', [DashboardController::class, 'complaints'])->name('admin.dashboard.complaints');
+    Route::get('/dashboard/cybercomplaint', [DashboardController::class, 'cybercomplaint'])->name('admin.dashboard.cybercomplaint');
 
     // إدارة الموظفين
     Route::get('/employees', [EmployeeController::class, 'index']);
