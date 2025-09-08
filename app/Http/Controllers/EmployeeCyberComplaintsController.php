@@ -15,17 +15,26 @@ class EmployeeCyberComplaintsController extends Controller
 {  
   use AuthorizesRequests;
 public function getComplaints(Request $request)
- {
-   $this->authorize('viewAny',CyberComplaint::class);
-   $employee = Auth::user();
-   if(!($employee instanceof Employee))
-   {
-    return ApiResponse::sendResponse(403,'Unauthorized',[]);
-   }
-   $complaints = CyberComplaint::all();
-    return ApiResponse::sendResponse(200,'Get Complaints',$complaints);
+{
+    $this->authorize('viewAny', CyberComplaint::class);
 
- }
+    $employee = Auth::user();
+    if (!($employee instanceof Employee)) {
+        return ApiResponse::sendResponse(403, 'Unauthorized', []);
+    }
+
+    if ($employee->government_entity_id != 12 || $employee->city_id != 15) {
+        return ApiResponse::sendResponse(200, 'Get CyberComplaints', []); 
+    }
+
+    $Cybercomplaints = CyberComplaint::query()
+        ->where('government_entity_id', $employee->government_entity_id)
+        ->where('city_id', $employee->city_id)
+        ->get();
+
+    return ApiResponse::sendResponse(200, 'Get CyberComplaints', $Cybercomplaints);
+}
+
  public function show($id)
 {
     $employee = Auth::user();
