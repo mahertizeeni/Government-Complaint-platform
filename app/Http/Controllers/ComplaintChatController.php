@@ -31,7 +31,7 @@ public function handleChat(Request $request)
     $sessionToken = $request->input('session_token') ?? (string) Str::uuid();
     $userMessage = $request->input('message');
 
-    // (اختياري) سجل للتشخيص
+    //سجل للتشخيص
     Log::info('Chat request payload (handled): ', array_merge($request->all(), ['resolved_session_token' => $sessionToken]));
 
     // ما نرجع 400 بسبب عدم وجود session_token — نحتاج فقط الرسالة
@@ -98,7 +98,6 @@ public function handleChat(Request $request)
     // حفظ المحادثة
     $this->chatService->saveConversation($sessionToken, $conversation);
 
-    // إرجاع الرد + session token عشان الفرونت يعرفه ويحفظه
     return response()->json([
         'response' => $botResponse,
         'session_token' => $sessionToken
