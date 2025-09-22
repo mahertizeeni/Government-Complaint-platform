@@ -101,6 +101,7 @@ public function handleChat(Request $request)
     return response()->json([
         'response' => $botResponse,
         'session_token' => $sessionToken
+ 
     ]);
 }
 }
